@@ -1,7 +1,7 @@
 <?php
 /**
  * Ratings & reviews (ratings_feedback, written by the customer apps).
- * ratings_feedback.unique_booking_id holds Service_booking.ID.
+ * ratings_feedback.unique_booking_id holds service_booking.ID.
  * Moderation status: Pending (new) / Approved / Hidden.
  */
 
@@ -30,7 +30,7 @@ function reviews_from_sql(): string
 {
     return 'FROM ratings_feedback r
         LEFT JOIN users u ON u.ID = r.user_id
-        LEFT JOIN Service_booking b ON b.ID = r.unique_booking_id
+        LEFT JOIN service_booking b ON b.ID = r.unique_booking_id
         LEFT JOIN service_partners p ON p.id = b.professional_id';
 }
 

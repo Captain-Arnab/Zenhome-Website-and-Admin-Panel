@@ -31,7 +31,7 @@ if (!isset($data['user_id'])) {
 $userId = $data['user_id'];
 
 // Prepare SQL query to update booking status
-$sql = "UPDATE Service_booking SET status = 'booking confirmed' WHERE user_id = :user_id AND status = 'pending'";
+$sql = "UPDATE service_booking SET status = 'booking confirmed' WHERE user_id = :user_id AND status = 'pending'";
 $stmt = $conn->prepare($sql);
 $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT); 
 

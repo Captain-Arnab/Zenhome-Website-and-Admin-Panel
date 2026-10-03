@@ -555,7 +555,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         let coupon = null;   // {code, amount, discount, final_amount}
 
-        // SaverPacks ids for server-side pricing (null if an old cart item has none yet)
+        // saverpacks ids for server-side pricing (null if an old cart item has none yet)
         function packItems(cart) {
             const items = cart.map(function (item) {
                 return { pack_id: parseInt(item.pack_id, 10) || 0, quantity: Number(item.quantity) || 1 };
@@ -825,7 +825,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 amount: total
             };
 
-            // The server prices the booking from these SaverPacks ids ("amount" is only a fallback)
+            // The server prices the booking from these saverpacks ids ("amount" is only a fallback)
             const items = packItems(cart);
             if (items) booking.items = items;
 

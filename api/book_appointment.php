@@ -11,11 +11,11 @@ header('Content-Type: application/json');
 /*
  * Optional fields (older apps can keep sending the original payload):
  *   amount       booking subtotal before discount (website cart total)
- *   items        [{"pack_id": 12, "quantity": 1}] - SaverPacks ids; when sent,
- *                the subtotal is calculated here from SaverPacks.price
+ *   items        [{"pack_id": 12, "quantity": 1}] - saverpacks ids; when sent,
+ *                the subtotal is calculated here from saverpacks.price
  *   coupon_code  applied with the rules in coupon_helper.php
  * The response then also carries "amount", "discount", "amount_payable"
- * and "coupon". Service_booking.price stores the payable amount.
+ * and "coupon". service_booking.price stores the payable amount.
  */
 
 function booking_coupon_error(string $message, int $code = 422): void
@@ -56,7 +56,7 @@ if (getBearerToken() !== null) {
     }
 }
 
-// Booking amount: SaverPacks prices when pack ids are sent, else the given amount.
+// Booking amount: saverpacks prices when pack ids are sent, else the given amount.
 $amount = coupon_amount_from_packs($conn, $data['items'] ?? null);
 if ($amount === null && !empty($data['items'])) {
     http_response_code(422);
@@ -95,7 +95,7 @@ try {
             $conn->rollBack();
             booking_coupon_error('This coupon has reached its usage limit.', 409);
         }
-        $used = $conn->prepare("SELECT COUNT(*) FROM Service_booking WHERE coupon_id = ? AND user_id = ? AND LOWER(TRIM(status)) NOT IN ('cancelled', 'canceled')");
+        $used = $conn->prepare("SELECT COUNT(*) FROM service_booking WHERE coupon_id = ? AND user_id = ? AND LOWER(TRIM(status)) NOT IN ('cancelled', 'canceled')");
         $used->execute([(int) $coupon['coupon']['id'], (int) $user_id]);
         if ((int) $used->fetchColumn() >= max(1, (int) $coupon['coupon']['per_user_limit'])) {
             $conn->rollBack();
@@ -104,7 +104,7 @@ try {
     }
 
     // Prepare SQL query to insert data
-    $sql = "INSERT INTO Service_booking (category, subcategories, date, location, landmark, user_id, status, service_slot, created_at,
+    $sql = "INSERT INTO service_booking (category, subcategories, date, location, landmark, user_id, status, service_slot, created_at,
                                          price, gross_amount, coupon_id, coupon_code, discount_amount)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
@@ -124,7 +124,7 @@ try {
     $unique_booking_id = $user_id . "-" . $id;
 
     // Update the record with the unique booking ID
-    $update_sql = "UPDATE Service_booking SET unique_booking_id = ? WHERE id = ?";
+    $update_sql = "UPDATE service_booking SET unique_booking_id = ? WHERE id = ?";
     $update_stmt = $conn->prepare($update_sql);
     $update_stmt->execute([$unique_booking_id, $id]);
 

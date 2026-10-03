@@ -231,7 +231,7 @@ redeploy.
 | **Bookings** | Every customer booking: assign a professional, change status, cancel, add internal notes, mark cash bookings as paid. Status and assignment changes are what the customer's "My Bookings" screen and SMS (when `SMS_ENABLED=true`) reflect. |
 | **Categories** | The 9 service category pages and any admin-added category (served by `service-category.php`): name, images, website text (tagline, card label, highlights, long description, FAQs, and the "why choose us" / "how it works" / CTA paragraphs), and which slug/page it uses. Disabling a category hides it and its services from the website immediately. |
 | **Subcategories** | Groupings under a category (used to organise services); same active/inactive behaviour. |
-| **Services** (Smart Packages / SaverPacks) | Individual bookable services: price, description, image, which category/subcategory. Disabled services disappear from category pages and search. |
+| **Services** (Smart Packages / saverpacks) | Individual bookable services: price, description, image, which category/subcategory. Disabled services disappear from category pages and search. |
 | **Smart Packages** (Home Packages) | The homepage "Smart Packages" cards - link to a category, a specific service, or a custom URL. |
 | **Banners** | Homepage hero/slider/promotional images and their links, with optional start/end dates. |
 | **CMS Pages** | Freeform content pages (e.g. policy pages) rendered by slug. |

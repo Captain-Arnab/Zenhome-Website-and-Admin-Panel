@@ -1,7 +1,7 @@
 <?php
 /**
  * Homepage "Smart Packages" cards (home_packages table).
- * A card links to a category page, one service (SaverPacks id) or a custom link.
+ * A card links to a category page, one service (saverpacks id) or a custom link.
  */
 
 function home_package_row(array $r): array
@@ -27,8 +27,8 @@ function home_package_row(array $r): array
 
 function home_packages_sql(): string
 {
-    return 'SELECT p.*, c.NAME AS category_name, (SELECT sp.subcategory FROM SaverPacks sp WHERE sp.packId = p.pack_id) AS service_name
-        FROM home_packages p LEFT JOIN SERVICE_CATEGORY c ON c.CATEGORY_ID = p.category_id';
+    return 'SELECT p.*, c.NAME AS category_name, (SELECT sp.subcategory FROM saverpacks sp WHERE sp.packId = p.pack_id) AS service_name
+        FROM home_packages p LEFT JOIN service_category c ON c.CATEGORY_ID = p.category_id';
 }
 
 function home_packages_list(array $in, ?array $admin): array
@@ -64,11 +64,11 @@ function home_packages_save(array $in, ?array $admin): array
     $featured    = $v->bool('featured');
     $order       = $v->int('order', 'Order', ['required' => true, 'min' => 1, 'max' => 999]);
     $status      = $v->bool('status', true);
-    if ($categoryId && !q_value('SELECT 1 FROM SERVICE_CATEGORY WHERE CATEGORY_ID = ?', [$categoryId])) {
+    if ($categoryId && !q_value('SELECT 1 FROM service_category WHERE CATEGORY_ID = ?', [$categoryId])) {
         $v->error('category_id', 'Choose an existing category.');
     }
     if ($packId) {
-        $packCategory = q_value('SELECT category_Id FROM SaverPacks WHERE packId = ?', [$packId]);
+        $packCategory = q_value('SELECT category_Id FROM saverpacks WHERE packId = ?', [$packId]);
         if (!$packCategory) {
             $v->error('pack_id', 'Choose an existing service.');
         } elseif ($categoryId && (int) $packCategory !== $categoryId) {

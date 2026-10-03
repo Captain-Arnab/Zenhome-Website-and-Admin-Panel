@@ -24,7 +24,7 @@ $newSlot = is_array($data) && isset($data['newSlot']) && is_scalar($data['newSlo
 
 try {
     // Bookings with a technician assigned (prepared statements only)
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM Service_booking WHERE user_id = ? AND status = 'technician_assigned'");
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM service_booking WHERE user_id = ? AND status = 'technician_assigned'");
     $stmt->execute([$userId]);
 
     if ((int) $stmt->fetchColumn() === 0) {
@@ -33,7 +33,7 @@ try {
         exit;
     }
 
-    $update = $conn->prepare("UPDATE Service_booking SET service_slot = ? WHERE user_id = ? AND status = 'technician_assigned'");
+    $update = $conn->prepare("UPDATE service_booking SET service_slot = ? WHERE user_id = ? AND status = 'technician_assigned'");
     $update->execute([mb_substr($newSlot, 0, 255), $userId]);
 
     http_response_code(200); // OK

@@ -48,7 +48,7 @@ if (!file_put_contents($file_path, $image_data)) {
 }
 
 // Prepare SQL query to insert data (without subcategories)
-$sql = "INSERT INTO SERVICE_CATEGORY (name, image) VALUES (?, ?)";
+$sql = "INSERT INTO service_category (name, image) VALUES (?, ?)";
 $stmt = $conn->prepare($sql);
 
 // Execute the query with bound parameters

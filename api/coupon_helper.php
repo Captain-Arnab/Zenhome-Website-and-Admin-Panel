@@ -83,7 +83,7 @@ function coupon_evaluate(PDO $conn, $rawCode, float $amount, ?int $userId = null
         return ['valid' => false, 'message' => 'This coupon has reached its usage limit.'];
     }
     if ($userId) {
-        $used = $conn->prepare("SELECT COUNT(*) FROM Service_booking WHERE coupon_id = ? AND user_id = ? AND LOWER(TRIM(status)) NOT IN ('cancelled', 'canceled')");
+        $used = $conn->prepare("SELECT COUNT(*) FROM service_booking WHERE coupon_id = ? AND user_id = ? AND LOWER(TRIM(status)) NOT IN ('cancelled', 'canceled')");
         $used->execute([(int) $coupon['id'], $userId]);
         if ((int) $used->fetchColumn() >= max(1, (int) $coupon['per_user_limit'])) {
             return ['valid' => false, 'message' => 'You have already used this coupon.'];
@@ -136,7 +136,7 @@ function coupon_release(PDO $conn, int $couponId): void
 }
 
 /**
- * Server-side amount for app bookings that send SaverPacks ids:
+ * Server-side amount for app bookings that send saverpacks ids:
  * items = [{"pack_id": 12, "quantity": 1}, ...]. Returns null when no
  * usable ids were sent (the caller then uses the "amount" it was given).
  */
@@ -159,7 +159,7 @@ function coupon_amount_from_packs(PDO $conn, $items): ?float
         return null;
     }
     // Only bookable services: enabled pack in an active category.
-    $stmt = $conn->prepare('SELECT sp.packId, sp.price FROM SaverPacks sp JOIN SERVICE_CATEGORY c ON c.CATEGORY_ID = sp.category_Id
+    $stmt = $conn->prepare('SELECT sp.packId, sp.price FROM saverpacks sp JOIN service_category c ON c.CATEGORY_ID = sp.category_Id
         WHERE sp.status = 1 AND c.status = 1 AND sp.packId IN (' . implode(',', array_fill(0, count($qty), '?')) . ')');
     $stmt->execute(array_keys($qty));
     $total = 0.0;

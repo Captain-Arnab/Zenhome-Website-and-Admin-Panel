@@ -1,7 +1,7 @@
 <?php
 /**
  * Subcategories (service_subcategories): optional grouping between a
- * category and its services (SaverPacks.subcategory_id).
+ * category and its services (saverpacks.subcategory_id).
  */
 
 function subcategory_row(array $r): array
@@ -21,9 +21,9 @@ function subcategory_row(array $r): array
 function subcategories_select_sql(): string
 {
     return 'SELECT s.*, c.NAME AS category_name,
-            (SELECT COUNT(DISTINCT sp.subcategory) FROM SaverPacks sp WHERE sp.subcategory_id = s.id) AS service_count
+            (SELECT COUNT(DISTINCT sp.subcategory) FROM saverpacks sp WHERE sp.subcategory_id = s.id) AS service_count
         FROM service_subcategories s
-        JOIN SERVICE_CATEGORY c ON c.CATEGORY_ID = s.category_id';
+        JOIN service_category c ON c.CATEGORY_ID = s.category_id';
 }
 
 function subcategories_list(array $in, ?array $admin): array
@@ -44,7 +44,7 @@ function subcategories_list(array $in, ?array $admin): array
         $params[] = $status === 'active' ? 1 : 0;
     }
     $sqlWhere = implode(' AND ', $where);
-    $total = (int) q_value("SELECT COUNT(*) FROM service_subcategories s JOIN SERVICE_CATEGORY c ON c.CATEGORY_ID = s.category_id WHERE $sqlWhere", $params);
+    $total = (int) q_value("SELECT COUNT(*) FROM service_subcategories s JOIN service_category c ON c.CATEGORY_ID = s.category_id WHERE $sqlWhere", $params);
     $rows = q_all(subcategories_select_sql() . " WHERE $sqlWhere ORDER BY c.sort_order, s.sort_order, s.name LIMIT $limit OFFSET $offset", $params);
     return ok(paginated(array_map('subcategory_row', $rows), $total, $page, $limit));
 }
@@ -94,7 +94,7 @@ function subcategories_save(array $in, ?array $admin): array
         q('UPDATE service_subcategories SET category_id = ?, name = ?, slug = ?, sort_order = ?, status = ?, updated_at = ? WHERE id = ?', [$categoryId, $name, $slug, $order, $status ? 1 : 0, now(), $id]);
         if ((int) $existing['category_id'] !== $categoryId) {
             // Services keep their category; unlink them from a subcategory that moved away.
-            q('UPDATE SaverPacks SET subcategory_id = NULL WHERE subcategory_id = ? AND category_Id <> ?', [$id, $categoryId]);
+            q('UPDATE saverpacks SET subcategory_id = NULL WHERE subcategory_id = ? AND category_Id <> ?', [$id, $categoryId]);
         }
     } else {
         q('INSERT INTO service_subcategories (category_id, name, slug, sort_order, status, created_at) VALUES (?, ?, ?, ?, ?, ?)', [$categoryId, $name, $slug, $order, $status ? 1 : 0, now()]);

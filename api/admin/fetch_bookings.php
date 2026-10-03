@@ -29,7 +29,7 @@ if (!isset($data['status'])) {
 } // Debugging
 $status = $data['status'];
 // Prepare SQL query to fetch pending bookings
-$sql = "SELECT * FROM Service_booking WHERE status = :status";
+$sql = "SELECT * FROM service_booking WHERE status = :status";
 $stmt = $conn->prepare($sql);
 $stmt->bindParam(':status', $status, PDO::PARAM_STR);
 

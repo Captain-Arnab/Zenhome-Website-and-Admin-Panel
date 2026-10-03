@@ -66,7 +66,7 @@ if (getBearerToken() !== null) {
 }
 
 try {
-    $stmt = $conn->prepare("SELECT ID, user_id FROM Service_booking WHERE unique_booking_id = ? OR ID = ? ORDER BY (unique_booking_id = ?) DESC LIMIT 1");
+    $stmt = $conn->prepare("SELECT ID, user_id FROM service_booking WHERE unique_booking_id = ? OR ID = ? ORDER BY (unique_booking_id = ?) DESC LIMIT 1");
     $stmt->execute([$booking_ref, ctype_digit($booking_ref) ? (int) $booking_ref : 0, $booking_ref]);
     $booking = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$booking) {

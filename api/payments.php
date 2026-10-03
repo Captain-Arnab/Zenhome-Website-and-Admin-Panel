@@ -38,7 +38,7 @@ if ($method === 'POST') {
     $message = $input['message'] ?? 'Order payment';
     // Website orders ("ZC-<booking id>"): charge the amount the booking was priced at on the server.
     if (is_string($orderId) && preg_match('/^ZC-(\d+-\d+)$/', $orderId, $m)) {
-        $booking = $conn->prepare('SELECT price FROM Service_booking WHERE unique_booking_id = ? AND user_id = ?');
+        $booking = $conn->prepare('SELECT price FROM service_booking WHERE unique_booking_id = ? AND user_id = ?');
         $booking->execute([$m[1], $auth['user_id']]);
         $bookingRow = $booking->fetch(PDO::FETCH_ASSOC);
         if (!$bookingRow) {

@@ -1,8 +1,8 @@
 <?php
 /**
  * Read-only service catalog managed in the admin panel: categories
- * (SERVICE_CATEGORY), subcategories (service_subcategories) and services
- * (SaverPacks groups). Used by the public endpoints
+ * (service_category), subcategories (service_subcategories) and services
+ * (saverpacks groups). Used by the public endpoints
  * (api/catalog_categories.php, catalog_subcategories.php, catalog_services.php)
  * and rendered server-side by the website pages.
  *
@@ -10,7 +10,7 @@
  * enabled services inside active categories. Nothing is cached, so admin
  * changes show up on the next request.
  *
- * A service is a SaverPacks group sharing (category_Id, subcategory); its id
+ * A service is a saverpacks group sharing (category_Id, subcategory); its id
  * (and the pack_id the cart / booking sends) is the group's MIN(packId),
  * the same id the admin panel uses.
  */
@@ -89,15 +89,15 @@ function catalog_category_sql(): string
     return 'SELECT c.CATEGORY_ID, c.NAME, c.IMAGE, c.slug, c.web_image, c.cover_image, c.web_icon, c.tagline, c.web_label,
             c.page_title, c.highlights, c.description, c.long_description, c.faqs, c.why_html, c.process_html, c.cta_html, c.sort_order,
             (SELECT COUNT(*) FROM service_subcategories s WHERE s.category_id = c.CATEGORY_ID AND s.status = 1) AS sub_count,
-            (SELECT COUNT(DISTINCT sp.subcategory) FROM SaverPacks sp WHERE sp.category_Id = c.CATEGORY_ID AND sp.status = 1) AS service_count
-        FROM SERVICE_CATEGORY c
+            (SELECT COUNT(DISTINCT sp.subcategory) FROM saverpacks sp WHERE sp.category_Id = c.CATEGORY_ID AND sp.status = 1) AS service_count
+        FROM service_category c
         WHERE c.status = 1';
 }
 
 /** @return array{0:array,1:int} active categories in display order, [items, total] */
 function catalog_categories(PDO $pdo, int $limit = 100, int $offset = 0): array
 {
-    $total = (int) $pdo->query('SELECT COUNT(*) FROM SERVICE_CATEGORY WHERE status = 1')->fetchColumn();
+    $total = (int) $pdo->query('SELECT COUNT(*) FROM service_category WHERE status = 1')->fetchColumn();
     $rows = $pdo->query(catalog_category_sql() . ' ORDER BY c.sort_order, c.NAME LIMIT ' . (int) $limit . ' OFFSET ' . (int) $offset)->fetchAll(PDO::FETCH_ASSOC);
     return [array_map('catalog_category_row', $rows), $total];
 }
@@ -122,7 +122,7 @@ function catalog_category(PDO $pdo, $key): ?array
 function catalog_subcategories(PDO $pdo, int $categoryId): array
 {
     $stmt = $pdo->prepare('SELECT s.id, s.category_id, s.name, s.slug, s.sort_order,
-            (SELECT COUNT(DISTINCT sp.subcategory) FROM SaverPacks sp WHERE sp.subcategory_id = s.id AND sp.status = 1) AS service_count
+            (SELECT COUNT(DISTINCT sp.subcategory) FROM saverpacks sp WHERE sp.subcategory_id = s.id AND sp.status = 1) AS service_count
         FROM service_subcategories s
         WHERE s.category_id = ? AND s.status = 1
         ORDER BY s.sort_order, s.name');
@@ -189,9 +189,9 @@ function catalog_services(PDO $pdo, array $filters = [], int $limit = 100, int $
                 MAX(sp.idealFor) AS ideal_for, MAX(sp.slug) AS slug, MAX(sp.web_tag) AS tag, MAX(sp.highlights) AS highlights,
                 MAX(sp.sort_order) AS sort_order,
                 GROUP_CONCAT(REPLACE(REPLACE(sp.whatsIncluded, CHAR(13), \' \'), CHAR(10), \' \') ORDER BY sp.packId SEPARATOR \'\n\') AS included
-            FROM SaverPacks sp
+            FROM saverpacks sp
             GROUP BY sp.category_Id, sp.subcategory) g
-        JOIN SERVICE_CATEGORY c ON c.CATEGORY_ID = g.category_id AND c.status = 1
+        JOIN service_category c ON c.CATEGORY_ID = g.category_id AND c.status = 1
         LEFT JOIN service_subcategories s ON s.id = g.subcategory_id';
     $sqlWhere = implode(' AND ', $where);
 

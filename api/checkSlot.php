@@ -17,13 +17,13 @@ if (empty($date)) {
 
 try {
  // Prepare SQL query to fetch booked slots for the given date
-$sql = "SELECT service_slot FROM Service_booking WHERE date = :date";
+$sql = "SELECT service_slot FROM service_booking WHERE date = :date";
  $stmt = $conn->prepare($sql);
  $stmt->bindParam(':date', $date, PDO::PARAM_STR);
  $stmt->execute();
  $bookedSlots = $stmt->fetchAll(PDO::FETCH_COLUMN); 
 
- // Define available time slots (assuming 'service_slot' is a column in Service_booking) 
+ // Define available time slots (assuming 'service_slot' is a column in service_booking) 
  $availableSlots = [
 "10:00 AM - 11:00 AM",
 "11:00 AM - 12:00 PM",

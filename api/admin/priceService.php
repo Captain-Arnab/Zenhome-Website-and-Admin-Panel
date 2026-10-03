@@ -40,7 +40,7 @@ try {
     }
 
     // Fetch existing category data
-    $sql = "SELECT subcategories FROM SERVICE_CATEGORY WHERE CATEGORY_ID = :categoryId";
+    $sql = "SELECT subcategories FROM service_category WHERE CATEGORY_ID = :categoryId";
     $stmt = $conn->prepare($sql);
     $stmt->bindParam(':categoryId', $categoryId, PDO::PARAM_INT);
     $stmt->execute();
@@ -69,7 +69,7 @@ try {
     $updatedSubcategoriesJson = json_encode($existingSubcategories);
 
     // Update subcategories in the database
-    $updateSql = "UPDATE SERVICE_CATEGORY SET subcategories = :updatedSubcategories WHERE CATEGORY_ID = :categoryId";
+    $updateSql = "UPDATE service_category SET subcategories = :updatedSubcategories WHERE CATEGORY_ID = :categoryId";
     $updateStmt = $conn->prepare($updateSql);
     $updateStmt->bindParam(':updatedSubcategories', $updatedSubcategoriesJson, PDO::PARAM_STR);
     $updateStmt->bindParam(':categoryId', $categoryId, PDO::PARAM_INT);

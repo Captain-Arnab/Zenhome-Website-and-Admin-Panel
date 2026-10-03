@@ -4,7 +4,7 @@
  * the coupon is not used up here; book_appointment.php applies it).
  *
  * POST JSON {coupon_code, amount}            amount = booking subtotal
- *        or {coupon_code, items: [{pack_id, quantity}]}  priced from SaverPacks
+ *        or {coupon_code, items: [{pack_id, quantity}]}  priced from saverpacks
  * Optional login token (Authorization: Bearer / ?token=) or user_id adds the
  * per-customer limit check.
  * 200 data: {code, description, type, value, max_discount, min_order, valid_to, amount, discount, final_amount}

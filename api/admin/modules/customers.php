@@ -8,11 +8,11 @@
 function customers_select_sql(): string
 {
     return "SELECT u.ID, u.first_name, u.last_name, u.email, u.phone, u.address, u.status, u.photo, u.created_at,
-            (SELECT COUNT(*) FROM Service_booking b WHERE b.user_id = u.ID) AS booking_count,
-            (SELECT MAX(b.date) FROM Service_booking b WHERE b.user_id = u.ID) AS last_booking,
-            (SELECT b.location FROM Service_booking b WHERE b.user_id = u.ID ORDER BY b.created_at DESC, b.ID DESC LIMIT 1) AS last_location,
+            (SELECT COUNT(*) FROM service_booking b WHERE b.user_id = u.ID) AS booking_count,
+            (SELECT MAX(b.date) FROM service_booking b WHERE b.user_id = u.ID) AS last_booking,
+            (SELECT b.location FROM service_booking b WHERE b.user_id = u.ID ORDER BY b.created_at DESC, b.ID DESC LIMIT 1) AS last_location,
             (SELECT COALESCE(SUM(t.amount), 0) FROM transactions t WHERE t.user_id = CAST(u.ID AS CHAR) AND t.status = 'success') AS online_spent,
-            (SELECT COALESCE(SUM(b.price), 0) FROM Service_booking b
+            (SELECT COALESCE(SUM(b.price), 0) FROM service_booking b
                 LEFT JOIN transactions t2 ON t2.transaction_id = CONCAT('ZC-', b.unique_booking_id)
                 WHERE b.user_id = u.ID AND LOWER(b.payment_status) = 'paid' AND t2.id IS NULL) AS cash_spent
         FROM users u";
@@ -52,7 +52,7 @@ function customers_where(array $in, array &$params): string
         $where[] = customer_inactive_sql();
     }
     if (!empty($in['city'])) {
-        $where[] = '(u.address LIKE ? OR EXISTS (SELECT 1 FROM Service_booking cb WHERE cb.user_id = u.ID AND cb.location LIKE ?))';
+        $where[] = '(u.address LIKE ? OR EXISTS (SELECT 1 FROM service_booking cb WHERE cb.user_id = u.ID AND cb.location LIKE ?))';
         $params[] = '%' . $in['city'] . '%';
         $params[] = '%' . $in['city'] . '%';
     }
@@ -83,7 +83,7 @@ function customers_summary(): array
 function customers_cities(): array
 {
     $cities = [];
-    foreach (q_all("SELECT DISTINCT location FROM Service_booking WHERE location IS NOT NULL AND location <> '' LIMIT 1000") as $r) {
+    foreach (q_all("SELECT DISTINCT location FROM service_booking WHERE location IS NOT NULL AND location <> '' LIMIT 1000") as $r) {
         $city = address_parts($r['location'])['city'];
         if ($city !== '') {
             $cities[strtolower($city)] = $city;
@@ -141,7 +141,7 @@ function customers_addresses(array $in, ?array $admin): array
     $row = customer_find((int) ($in['id'] ?? 0));
     $addresses = [];
     $seen = [];
-    foreach (q_all('SELECT location, landmark, MAX(created_at) AS used_at FROM Service_booking WHERE user_id = ? AND location IS NOT NULL AND location <> \'\' GROUP BY location, landmark ORDER BY used_at DESC LIMIT 20', [$row['ID']]) as $a) {
+    foreach (q_all('SELECT location, landmark, MAX(created_at) AS used_at FROM service_booking WHERE user_id = ? AND location IS NOT NULL AND location <> \'\' GROUP BY location, landmark ORDER BY used_at DESC LIMIT 20', [$row['ID']]) as $a) {
         $key = strtolower(trim($a['location']));
         if (isset($seen[$key])) {
             continue;

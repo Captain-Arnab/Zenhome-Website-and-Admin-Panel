@@ -2,7 +2,7 @@
 /**
  * Booking status vocabulary.
  *
- * Service_booking.status is free text written by several existing APIs
+ * service_booking.status is free text written by several existing APIs
  * ("Pending Confirmation", "booking confirmed", "technician_assigned",
  * "Service Complete" ...). The admin panel works with 6 canonical statuses
  * and maps them both ways, so existing apps keep reading the values they
@@ -24,7 +24,7 @@ function booking_status_aliases(): array
     ];
 }
 
-/** Value written to Service_booking.status for a canonical status. */
+/** Value written to service_booking.status for a canonical status. */
 function booking_status_raw(string $canonical): string
 {
     return [

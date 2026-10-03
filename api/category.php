@@ -9,7 +9,7 @@ header("X-Frame-Options: DENY");
 try {
     // Categories disabled in the admin panel are hidden; ?include_disabled=1 returns all.
     $where = !empty($_GET['include_disabled']) ? '' : ' WHERE status = 1';
-    $stmt = $conn->prepare("SELECT CATEGORY_ID, NAME, IMAGE FROM SERVICE_CATEGORY" . $where . " ORDER BY sort_order, CATEGORY_ID");
+    $stmt = $conn->prepare("SELECT CATEGORY_ID, NAME, IMAGE FROM service_category" . $where . " ORDER BY sort_order, CATEGORY_ID");
     $stmt->execute();
 
     $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);

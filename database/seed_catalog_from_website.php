@@ -1,6 +1,6 @@
 <?php
 /**
- * One-time catalog seed: fills Categories, Services (SaverPacks) and Banners
+ * One-time catalog seed: fills Categories, Services (saverpacks) and Banners
  * from the content that used to be hardcoded on the website
  * (database/seed_data/website_catalog.php) and copies the website images,
  * resized to WebP, into uploads/admin/{categories,services,banners}/.
@@ -12,10 +12,10 @@
  * - Every seeded item is recorded in catalog_seed_log; recorded items are
  *   skipped, so later edits made in the admin panel are never overwritten.
  * - Existing rows are matched by slug, then by their current name, so the
- *   app's existing categories / SaverPacks rows are updated in place (the
+ *   app's existing categories / saverpacks rows are updated in place (the
  *   website is the source of truth for names, prices and descriptions);
  *   nothing is duplicated and no row is deleted.
- * - SERVICE_CATEGORY.IMAGE (the app's image) and status are left as they are.
+ * - service_category.IMAGE (the app's image) and status are left as they are.
  *
  * Requires migration 2026_10_03_003_catalog_website.sql (php database/migrate.php).
  */
@@ -35,7 +35,7 @@ try {
     fwrite(STDERR, "Database connection failed.\n");
     exit(1);
 }
-foreach (['SERVICE_CATEGORY' => 'cover_image', 'SaverPacks' => 'highlights'] as $table => $column) {
+foreach (['service_category' => 'cover_image', 'saverpacks' => 'highlights'] as $table => $column) {
     if (!q_one("SHOW COLUMNS FROM `$table` LIKE '$column'")) {
         fwrite(STDERR, "Run the migrations first: php database/migrate.php\n");
         exit(1);
@@ -117,13 +117,13 @@ try {
     foreach ($data['categories'] as $c) {
         $slug = $c['slug'];
         $logged = seed_logged('category', $slug);
-        $catId = $logged ? (int) q_value('SELECT CATEGORY_ID FROM SERVICE_CATEGORY WHERE CATEGORY_ID = ?', [$logged['ref_id']]) : 0;
+        $catId = $logged ? (int) q_value('SELECT CATEGORY_ID FROM service_category WHERE CATEGORY_ID = ?', [$logged['ref_id']]) : 0;
 
         if ($logged) {
             $stats['categories'][] = "kept      #{$logged['ref_id']} {$c['name']} (seeded before" . ($catId ? '' : ', since deleted') . ')';
         } else {
-            $row = q_one('SELECT * FROM SERVICE_CATEGORY WHERE slug = ?', [$slug])
-                ?? seed_match(q_all('SELECT * FROM SERVICE_CATEGORY'), 'NAME', array_merge([$c['name']], $c['match']));
+            $row = q_one('SELECT * FROM service_category WHERE slug = ?', [$slug])
+                ?? seed_match(q_all('SELECT * FROM service_category'), 'NAME', array_merge([$c['name']], $c['match']));
             $card  = seed_image($c['image'], 'categories', $slug . '-card', 600);
             $cover = seed_image($c['cover_image'], 'categories', $slug . '-cover', 1200);
             $fields = [
@@ -133,13 +133,13 @@ try {
                 'web_image' => $card, 'cover_image' => $cover, 'updated_at' => now(),
             ];
             if ($row) {
-                $clash = q_value('SELECT CATEGORY_ID FROM SERVICE_CATEGORY WHERE LOWER(NAME) = LOWER(?) AND CATEGORY_ID <> ?', [$c['name'], $row['CATEGORY_ID']]);
+                $clash = q_value('SELECT CATEGORY_ID FROM service_category WHERE LOWER(NAME) = LOWER(?) AND CATEGORY_ID <> ?', [$c['name'], $row['CATEGORY_ID']]);
                 if ($clash) {
                     $warnings[] = "Category name \"{$c['name']}\" is already used by #$clash; kept the name of #{$row['CATEGORY_ID']}.";
                     unset($fields['NAME']);
                 }
                 $sets = implode(', ', array_map(fn($k) => "`$k` = ?", array_keys($fields)));
-                q("UPDATE SERVICE_CATEGORY SET $sets WHERE CATEGORY_ID = ?", array_merge(array_values($fields), [$row['CATEGORY_ID']]));
+                q("UPDATE service_category SET $sets WHERE CATEGORY_ID = ?", array_merge(array_values($fields), [$row['CATEGORY_ID']]));
                 $catId = (int) $row['CATEGORY_ID'];
                 $action = 'updated';
                 $stats['categories'][] = "updated   #$catId {$row['NAME']}" . ($row['NAME'] !== $c['name'] ? " -> {$c['name']}" : '');
@@ -147,7 +147,7 @@ try {
                 $fields['IMAGE'] = $card ?? '';
                 $fields['status'] = 1;
                 $cols = implode(', ', array_map(fn($k) => "`$k`", array_keys($fields)));
-                q("INSERT INTO SERVICE_CATEGORY ($cols) VALUES (" . implode(', ', array_fill(0, count($fields), '?')) . ')', array_values($fields));
+                q("INSERT INTO service_category ($cols) VALUES (" . implode(', ', array_fill(0, count($fields), '?')) . ')', array_values($fields));
                 $catId = (int) $pdo->lastInsertId();
                 $action = 'created';
                 $stats['categories'][] = "created   #$catId {$c['name']}";
@@ -165,7 +165,7 @@ try {
                 $stats['services'][] = "kept      #{$logged['ref_id']} {$s['name']} (seeded before)";
                 continue;
             }
-            $groups = q_all('SELECT MIN(packId) AS id, subcategory, MAX(price) AS price, MAX(slug) AS slug FROM SaverPacks WHERE category_Id = ? GROUP BY subcategory', [$catId]);
+            $groups = q_all('SELECT MIN(packId) AS id, subcategory, MAX(price) AS price, MAX(slug) AS slug FROM saverpacks WHERE category_Id = ? GROUP BY subcategory', [$catId]);
             $group = null;
             foreach ($groups as $g) {
                 if ($g['slug'] === $key) {
@@ -178,13 +178,13 @@ try {
 
             if ($group) {
                 $name = $s['name'];
-                $clash = q_value('SELECT MIN(packId) FROM SaverPacks WHERE category_Id = ? AND subcategory = ? AND subcategory <> ?', [$catId, $name, $group['subcategory']]);
+                $clash = q_value('SELECT MIN(packId) FROM saverpacks WHERE category_Id = ? AND subcategory = ? AND subcategory <> ?', [$catId, $name, $group['subcategory']]);
                 if ($clash) {
                     $warnings[] = "Service name \"$name\" is already used by #$clash; kept \"{$group['subcategory']}\".";
                     $name = $group['subcategory'];
                 }
                 q(
-                    'UPDATE SaverPacks SET subcategory = ?, price = ?, whyChooseThisPack = ?, slug = ?, web_tag = ?, highlights = ?, sort_order = ?, image = COALESCE(?, image), updated_at = ?
+                    'UPDATE saverpacks SET subcategory = ?, price = ?, whyChooseThisPack = ?, slug = ?, web_tag = ?, highlights = ?, sort_order = ?, image = COALESCE(?, image), updated_at = ?
                      WHERE category_Id = ? AND subcategory = ?',
                     [$name, $s['price'], $s['description'], $key, $s['tag'], $highlights, $s['sort'], $image, now(), $catId, $group['subcategory']]
                 );
@@ -198,11 +198,11 @@ try {
                 seed_log('service', $key, (int) $group['id'], 'updated');
                 $stats['services'][] = "updated   #{$group['id']} $name" . ($changes ? ' (' . implode('; ', $changes) . ')' : '');
             } else {
-                // New service: one SaverPacks row per highlight ("what's included" item).
+                // New service: one saverpacks row per highlight ("what's included" item).
                 $firstId = 0;
                 foreach ($s['highlights'] ?: [$s['name']] as $item) {
                     q(
-                        'INSERT INTO SaverPacks (category_Id, subcategory, price, whatsIncluded, includedDescription, whyChooseThisPack, idealFor, serviceTime, image, status, updated_at, slug, web_tag, highlights, sort_order)
+                        'INSERT INTO saverpacks (category_Id, subcategory, price, whatsIncluded, includedDescription, whyChooseThisPack, idealFor, serviceTime, image, status, updated_at, slug, web_tag, highlights, sort_order)
                          VALUES (?, ?, ?, ?, \'\', ?, \'\', \'\', ?, 1, ?, ?, ?, ?, ?)',
                         [$catId, $s['name'], $s['price'], mb_substr($item, 0, 255), $s['description'], $image, now(), $key, $s['tag'], $highlights, $s['sort']]
                     );

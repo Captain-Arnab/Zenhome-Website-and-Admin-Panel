@@ -35,7 +35,7 @@ $select = "SELECT b.ID, b.unique_booking_id, b.category, b.subcategories, b.date
         b.status, b.price, b.gross_amount, b.discount_amount, b.coupon_code, b.payment_method, b.payment_status,
         b.technician_name, b.technician_phone, b.created_at, b.completed_at, b.cancel_reason,
         t.status AS txn_status, t.refund_status AS txn_refund
-    FROM Service_booking b
+    FROM service_booking b
     LEFT JOIN transactions t ON t.transaction_id = CONCAT('ZC-', b.unique_booking_id)";
 
 function my_booking_out(array $b): array
@@ -101,7 +101,7 @@ if ($filter !== '') {
     $where .= ' AND ' . booking_status_sql('b.status') . ($filter === 'past' ? '' : ' NOT') . " IN ('Completed', 'Cancelled')";
 }
 
-$count = $conn->prepare("SELECT COUNT(*) FROM Service_booking b WHERE $where");
+$count = $conn->prepare("SELECT COUNT(*) FROM service_booking b WHERE $where");
 $count->execute($params);
 $total = (int) $count->fetchColumn();
 

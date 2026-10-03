@@ -79,17 +79,17 @@ function report_customer(string $from, string $to, int $limit, int $offset): arr
 {
     api_routes('customers');
     $params = ["$from 00:00:00", "$to 23:59:59", "$from 00:00:00", "$to 23:59:59"];
-    $where = '(u.created_at BETWEEN ? AND ? OR EXISTS (SELECT 1 FROM Service_booking rb WHERE rb.user_id = u.ID AND rb.created_at BETWEEN ? AND ?))';
+    $where = '(u.created_at BETWEEN ? AND ? OR EXISTS (SELECT 1 FROM service_booking rb WHERE rb.user_id = u.ID AND rb.created_at BETWEEN ? AND ?))';
     $total = (int) q_value("SELECT COUNT(*) FROM users u WHERE $where", $params);
     $rows = array_map('customer_row', q_all(customers_select_sql() . " WHERE $where ORDER BY booking_count DESC, u.ID DESC LIMIT $limit OFFSET $offset", $params));
 
     $agg = q_one(
-        'SELECT COUNT(*) AS customers, SUM(c > 1) AS repeaters FROM (SELECT user_id, COUNT(*) AS c FROM Service_booking WHERE user_id IS NOT NULL GROUP BY user_id) x'
+        'SELECT COUNT(*) AS customers, SUM(c > 1) AS repeaters FROM (SELECT user_id, COUNT(*) AS c FROM service_booking WHERE user_id IS NOT NULL GROUP BY user_id) x'
     );
     $totals = payment_totals();
     $payers = (int) q_value(
         "SELECT COUNT(*) FROM (
-            SELECT CAST(user_id AS CHAR) AS uid FROM Service_booking WHERE LOWER(payment_status) = 'paid' AND user_id IS NOT NULL
+            SELECT CAST(user_id AS CHAR) AS uid FROM service_booking WHERE LOWER(payment_status) = 'paid' AND user_id IS NOT NULL
             UNION SELECT user_id FROM transactions WHERE status = 'success'
         ) x"
     );
@@ -119,7 +119,7 @@ function report_service(string $from, string $to, int $limit, int $offset): arra
     }
     $amounts = [];
     $bookings = q_all(
-        'SELECT b.price, b.subcategories, t.amount AS txn_amount FROM Service_booking b ' . BOOKING_TXN_JOIN . '
+        'SELECT b.price, b.subcategories, t.amount AS txn_amount FROM service_booking b ' . BOOKING_TXN_JOIN . '
          WHERE b.created_at BETWEEN ? AND ? AND ' . booking_status_sql('b.status') . " <> 'Cancelled'",
         ["$from 00:00:00", "$to 23:59:59"]
     );
@@ -143,7 +143,7 @@ function report_service(string $from, string $to, int $limit, int $offset): arra
         'summary' => [
             'active_services' => count(array_filter($services, fn($s) => $s['status'])),
             'top_service'     => $top,
-            'categories'      => (int) q_value('SELECT COUNT(*) FROM SERVICE_CATEGORY WHERE status = 1'),
+            'categories'      => (int) q_value('SELECT COUNT(*) FROM service_category WHERE status = 1'),
             'avg_ticket'      => $amounts ? round(array_sum($amounts) / count($amounts)) : 0,
         ],
         'rows'  => array_map(fn($s) => [
@@ -161,8 +161,8 @@ function report_professional(string $from, string $to, int $limit, int $offset):
     $sql = professional_select_sql();
     $pros = array_map(function ($r) use ($from, $to, $done) {
         $p = professional_row($r);
-        $p['period_jobs'] = (int) q_value('SELECT COUNT(*) FROM Service_booking WHERE professional_id = ? AND date BETWEEN ? AND ?', [$p['id'], $from, $to]);
-        $p['period_completed'] = (int) q_value("SELECT COUNT(*) FROM Service_booking WHERE professional_id = ? AND date BETWEEN ? AND ? AND LOWER(TRIM(status)) $done", [$p['id'], $from, $to]);
+        $p['period_jobs'] = (int) q_value('SELECT COUNT(*) FROM service_booking WHERE professional_id = ? AND date BETWEEN ? AND ?', [$p['id'], $from, $to]);
+        $p['period_completed'] = (int) q_value("SELECT COUNT(*) FROM service_booking WHERE professional_id = ? AND date BETWEEN ? AND ? AND LOWER(TRIM(status)) $done", [$p['id'], $from, $to]);
         return $p;
     }, q_all("$sql ORDER BY p.full_name"));
     usort($pros, fn($a, $b) => $b['period_jobs'] <=> $a['period_jobs']);
@@ -194,7 +194,7 @@ function report_date(string $from, string $to, int $limit, int $offset): array
         $rows[date('Y-m-d', $d)] = ['date' => date('Y-m-d', $d), 'bookings' => 0, 'completed' => 0, 'cancelled' => 0, 'revenue' => 0.0];
     }
     $range = ["$from 00:00:00", "$to 23:59:59"];
-    foreach (q_all('SELECT DATE(b.created_at) AS d, ' . booking_status_sql('b.status') . ' AS s, COUNT(*) AS c FROM Service_booking b WHERE b.created_at BETWEEN ? AND ? GROUP BY d, s', $range) as $r) {
+    foreach (q_all('SELECT DATE(b.created_at) AS d, ' . booking_status_sql('b.status') . ' AS s, COUNT(*) AS c FROM service_booking b WHERE b.created_at BETWEEN ? AND ? GROUP BY d, s', $range) as $r) {
         if (!isset($rows[$r['d']])) {
             continue;
         }
@@ -211,7 +211,7 @@ function report_date(string $from, string $to, int $limit, int $offset): array
         }
     }
     $cash = q_all(
-        'SELECT b.price, b.subcategories, COALESCE(DATE(b.completed_at), b.date, DATE(b.created_at)) AS d FROM Service_booking b ' . BOOKING_TXN_JOIN . "
+        'SELECT b.price, b.subcategories, COALESCE(DATE(b.completed_at), b.date, DATE(b.created_at)) AS d FROM service_booking b ' . BOOKING_TXN_JOIN . "
          WHERE t.id IS NULL AND LOWER(b.payment_status) = 'paid'"
     );
     foreach ($cash as $r) {

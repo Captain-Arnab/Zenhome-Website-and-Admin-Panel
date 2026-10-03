@@ -43,7 +43,7 @@ function notifications_send(array $in, ?array $admin): array
     $bookingId = null;
     if ($audience === 'booking') {
         $code = ltrim(trim((string) $in['target']), '#');
-        $bookingId = q_value('SELECT ID FROM Service_booking WHERE unique_booking_id = ? OR ID = ? LIMIT 1', [$code, ctype_digit($code) ? (int) $code : 0]);
+        $bookingId = q_value('SELECT ID FROM service_booking WHERE unique_booking_id = ? OR ID = ? LIMIT 1', [$code, ctype_digit($code) ? (int) $code : 0]);
     }
 
     if ($schedule) {

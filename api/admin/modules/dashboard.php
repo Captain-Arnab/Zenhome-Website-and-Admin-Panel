@@ -23,8 +23,8 @@ function dashboard_counts(): array
     return [
         'customers'     => (int) q_value('SELECT COUNT(*) FROM users'),
         'bookings'      => $counts['total'],
-        'today'         => (int) q_value('SELECT COUNT(*) FROM Service_booking WHERE created_at >= ? AND created_at <= ?', [today() . ' 00:00:00', today() . ' 23:59:59']),
-        'scheduled_today' => (int) q_value('SELECT COUNT(*) FROM Service_booking WHERE date = ?', [today()]),
+        'today'         => (int) q_value('SELECT COUNT(*) FROM service_booking WHERE created_at >= ? AND created_at <= ?', [today() . ' 00:00:00', today() . ' 23:59:59']),
+        'scheduled_today' => (int) q_value('SELECT COUNT(*) FROM service_booking WHERE date = ?', [today()]),
         'new'           => $counts['New'],
         'pending'       => $counts['Pending'],
         'assigned'      => $counts['Assigned'],
@@ -42,7 +42,7 @@ function dashboard_counts(): array
 function dashboard_badges(array $in, ?array $admin): array
 {
     return ok([
-        'unassigned'   => (int) q_value('SELECT COUNT(*) FROM Service_booking b WHERE ' . booking_needs_assignment_sql('b')),
+        'unassigned'   => (int) q_value('SELECT COUNT(*) FROM service_booking b WHERE ' . booking_needs_assignment_sql('b')),
         'open_tickets' => (int) q_value("SELECT COUNT(*) FROM support_tickets WHERE status = 'Open'"),
     ]);
 }
@@ -51,7 +51,7 @@ function dashboard_stats(array $in, ?array $admin): array
 {
     $stats = dashboard_counts();
     $stats['customers_trend'] = dashboard_trend('users', 'created_at');
-    $stats['bookings_trend']  = dashboard_trend('Service_booking', 'created_at');
+    $stats['bookings_trend']  = dashboard_trend('service_booking', 'created_at');
     return ok($stats);
 }
 
@@ -70,7 +70,7 @@ function dashboard_charts(array $in, ?array $admin): array
         $days[date('Y-m-d', strtotime("-$i day"))] = 0;
     }
     $rows = q_all(
-        'SELECT DATE(created_at) AS d, COUNT(*) AS c FROM Service_booking WHERE created_at >= ? GROUP BY DATE(created_at)',
+        'SELECT DATE(created_at) AS d, COUNT(*) AS c FROM service_booking WHERE created_at >= ? GROUP BY DATE(created_at)',
         [array_key_first($days) . ' 00:00:00']
     );
     foreach ($rows as $r) {
@@ -110,7 +110,7 @@ function dashboard_unassigned(array $in, ?array $admin): array
     }
     unset($item);
     $overdue = (int) q_value(
-        'SELECT COUNT(*) FROM Service_booking b WHERE ' . booking_needs_assignment_sql('b') . ' AND b.date < ?',
+        'SELECT COUNT(*) FROM service_booking b WHERE ' . booking_needs_assignment_sql('b') . ' AND b.date < ?',
         [$today]
     );
     return ok(['items' => $items, 'total' => $total, 'overdue' => $overdue, 'upcoming' => $total - $overdue]);
@@ -146,7 +146,7 @@ function dashboard_alerts(array $in, ?array $admin): array
     $since  = date('Y-m-d H:i:s', strtotime('-7 days'));
     $alerts = [];
 
-    foreach (q_all('SELECT ID, unique_booking_id, category, subcategories, created_at FROM Service_booking WHERE created_at >= ? ORDER BY created_at DESC LIMIT 5', [$since]) as $b) {
+    foreach (q_all('SELECT ID, unique_booking_id, category, subcategories, created_at FROM service_booking WHERE created_at >= ? ORDER BY created_at DESC LIMIT 5', [$since]) as $b) {
         $items = booking_items($b['subcategories']);
         $code = trim((string) $b['unique_booking_id'], ' "') ?: '#' . $b['ID'];
         $alerts[] = [
@@ -157,7 +157,7 @@ function dashboard_alerts(array $in, ?array $admin): array
         ];
     }
 
-    $queue = q_one('SELECT COUNT(*) AS c, MAX(b.created_at) AS latest FROM Service_booking b WHERE ' . booking_needs_assignment_sql('b'));
+    $queue = q_one('SELECT COUNT(*) AS c, MAX(b.created_at) AS latest FROM service_booking b WHERE ' . booking_needs_assignment_sql('b'));
     if ((int) $queue['c'] > 0) {
         $alerts[] = [
             'icon' => 'bi-person-exclamation', 'color' => 'warning',

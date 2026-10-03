@@ -8,7 +8,7 @@
  * data.items[]: {id, pack_id, slug, name, category_id, category, category_slug,
  *   subcategory_id, subcategory, price, mrp, duration, description, tag,
  *   highlights[], included[], ideal_for, image, image_url, url}
- * pack_id is the SaverPacks id to send to book_appointment.php /
+ * pack_id is the saverpacks id to send to book_appointment.php /
  * validate_coupon.php as items[{pack_id, quantity}] (priced on the server).
  * Disabled services, or services in a disabled category, are never returned.
  */
@@ -45,7 +45,7 @@ try {
                 }
             }
         } elseif (ctype_digit($subKey)) {
-            $stmt = $pdo->prepare('SELECT s.id FROM service_subcategories s JOIN SERVICE_CATEGORY c ON c.CATEGORY_ID = s.category_id AND c.status = 1 WHERE s.id = ? AND s.status = 1');
+            $stmt = $pdo->prepare('SELECT s.id FROM service_subcategories s JOIN service_category c ON c.CATEGORY_ID = s.category_id AND c.status = 1 WHERE s.id = ? AND s.status = 1');
             $stmt->execute([(int) $subKey]);
             $match = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
         } else {

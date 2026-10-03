@@ -1,6 +1,6 @@
 <?php
 /**
- * Services. The apps read services from SaverPacks, where one service is a
+ * Services. The apps read services from saverpacks, where one service is a
  * group of rows sharing (category_Id, subcategory); each row is one
  * "what's included" item and repeats price / description / time.
  * The service id exposed here is the group's first packId (MIN(packId)),
@@ -14,16 +14,16 @@ function services_group_sql(): string
                 MAX(sp.image) AS image, MAX(sp.status) AS status, MAX(sp.subcategory_id) AS subcategory_id,
                 MAX(sp.whyChooseThisPack) AS description, MAX(sp.idealFor) AS ideal_for, COUNT(*) AS item_count,
                 MAX(sp.slug) AS slug, MAX(sp.web_tag) AS tag, MAX(sp.highlights) AS highlights, MAX(sp.sort_order) AS sort_order
-            FROM SaverPacks sp
+            FROM saverpacks sp
             GROUP BY sp.category_Id, sp.subcategory';
 }
 
 function services_select_sql(): string
 {
     return 'SELECT g.*, c.NAME AS category_name, s.name AS subcategory_name,
-            (SELECT COUNT(*) FROM Service_booking b WHERE b.subcategories LIKE CONCAT(\'%\', g.name, \'%\')) AS booking_count
+            (SELECT COUNT(*) FROM service_booking b WHERE b.subcategories LIKE CONCAT(\'%\', g.name, \'%\')) AS booking_count
         FROM (' . services_group_sql() . ') g
-        LEFT JOIN SERVICE_CATEGORY c ON c.CATEGORY_ID = g.category_id
+        LEFT JOIN service_category c ON c.CATEGORY_ID = g.category_id
         LEFT JOIN service_subcategories s ON s.id = g.subcategory_id';
 }
 
@@ -73,7 +73,7 @@ function services_list(array $in, ?array $admin): array
     }
     $sqlWhere = implode(' AND ', $where);
     $from = '(' . services_group_sql() . ') g
-        LEFT JOIN SERVICE_CATEGORY c ON c.CATEGORY_ID = g.category_id
+        LEFT JOIN service_category c ON c.CATEGORY_ID = g.category_id
         LEFT JOIN service_subcategories s ON s.id = g.subcategory_id';
     $total = (int) q_value("SELECT COUNT(*) FROM $from WHERE $sqlWhere", $params);
     $rows = q_all(services_select_sql() . " WHERE $sqlWhere ORDER BY c.sort_order, g.sort_order = 0, g.sort_order, g.name LIMIT $limit OFFSET $offset", $params);
@@ -83,17 +83,17 @@ function services_list(array $in, ?array $admin): array
 /** id/name/category for pickers (e.g. location service map). */
 function services_options(array $in, ?array $admin): array
 {
-    $rows = q_all('SELECT g.id, g.name, g.status, g.category_id, c.NAME AS category FROM (' . services_group_sql() . ') g LEFT JOIN SERVICE_CATEGORY c ON c.CATEGORY_ID = g.category_id ORDER BY c.sort_order, g.name');
+    $rows = q_all('SELECT g.id, g.name, g.status, g.category_id, c.NAME AS category FROM (' . services_group_sql() . ') g LEFT JOIN service_category c ON c.CATEGORY_ID = g.category_id ORDER BY c.sort_order, g.name');
     return ok(['items' => array_map(fn($r) => [
         'id' => (int) $r['id'], 'name' => $r['name'], 'category_id' => (int) $r['category_id'],
         'category' => (string) $r['category'], 'status' => (int) $r['status'] === 1,
     ], $rows)]);
 }
 
-/** @return array{0:array,1:array} [service row, SaverPacks rows of the group] */
+/** @return array{0:array,1:array} [service row, saverpacks rows of the group] */
 function service_find(int $id): array
 {
-    $first = $id ? q_one('SELECT category_Id, subcategory FROM SaverPacks WHERE packId = ?', [$id]) : null;
+    $first = $id ? q_one('SELECT category_Id, subcategory FROM saverpacks WHERE packId = ?', [$id]) : null;
     if (!$first) {
         throw not_found('Service');
     }
@@ -101,7 +101,7 @@ function service_find(int $id): array
     if (!$row || (int) $row['id'] !== $id) {
         throw not_found('Service');
     }
-    $packs = q_all('SELECT * FROM SaverPacks WHERE category_Id = ? AND subcategory = ? ORDER BY packId', [$first['category_Id'], $first['subcategory']]);
+    $packs = q_all('SELECT * FROM saverpacks WHERE category_Id = ? AND subcategory = ? ORDER BY packId', [$first['category_Id'], $first['subcategory']]);
     return [$row, $packs];
 }
 
@@ -173,7 +173,7 @@ function services_save(array $in, ?array $admin): array
     if ($id) {
         [$existing, $packs] = service_find($id);
     }
-    $clash = q_value('SELECT MIN(packId) FROM SaverPacks WHERE category_Id = ? AND subcategory = ?', [$categoryId, $name]);
+    $clash = q_value('SELECT MIN(packId) FROM saverpacks WHERE category_Id = ? AND subcategory = ?', [$categoryId, $name]);
     if ($clash !== null && (int) $clash !== (int) $id) {
         throw new ApiException('A service with this name already exists in this category.', 422, ['name' => 'Name already used in this category.']);
     }
@@ -181,7 +181,7 @@ function services_save(array $in, ?array $admin): array
     // Slug: website address / cart id of the service, unique across all services.
     $slug = $slug !== '' ? $slug : ((string) ($existing['slug'] ?? '') ?: slugify($name, 100));
     $ownIds = array_map(fn($p) => (int) $p['packId'], $packs) ?: [0];
-    if ($slug === '' || q_value('SELECT 1 FROM SaverPacks WHERE slug = ? AND packId NOT IN (' . implode(',', $ownIds) . ')', [$slug])) {
+    if ($slug === '' || q_value('SELECT 1 FROM saverpacks WHERE slug = ? AND packId NOT IN (' . implode(',', $ownIds) . ')', [$slug])) {
         throw new ApiException('This URL slug is already used by another service.', 422, ['slug' => 'Choose a different slug.']);
     }
     if (strlen($highlights) > 500) {
@@ -199,13 +199,13 @@ function services_save(array $in, ?array $admin): array
         foreach ($items as $i => [$title, $itemDesc]) {
             if (isset($packs[$i])) {
                 q(
-                    'UPDATE SaverPacks SET category_Id = ?, subcategory = ?, price = ?, whyChooseThisPack = ?, idealFor = ?, serviceTime = ?, subcategory_id = ?, image = ?, mrp = ?, status = ?, updated_at = ?,
+                    'UPDATE saverpacks SET category_Id = ?, subcategory = ?, price = ?, whyChooseThisPack = ?, idealFor = ?, serviceTime = ?, subcategory_id = ?, image = ?, mrp = ?, status = ?, updated_at = ?,
                         slug = ?, web_tag = ?, highlights = ?, sort_order = ?, whatsIncluded = ?, includedDescription = ? WHERE packId = ?',
                     array_merge($common, [$title, $itemDesc, $packs[$i]['packId']])
                 );
             } else {
                 q(
-                    'INSERT INTO SaverPacks (category_Id, subcategory, price, whyChooseThisPack, idealFor, serviceTime, subcategory_id, image, mrp, status, updated_at, slug, web_tag, highlights, sort_order, whatsIncluded, includedDescription)
+                    'INSERT INTO saverpacks (category_Id, subcategory, price, whyChooseThisPack, idealFor, serviceTime, subcategory_id, image, mrp, status, updated_at, slug, web_tag, highlights, sort_order, whatsIncluded, includedDescription)
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                     array_merge($common, [$title, $itemDesc])
                 );
@@ -215,7 +215,7 @@ function services_save(array $in, ?array $admin): array
             }
         }
         foreach (array_slice($packs, count($items)) as $surplus) {
-            q('DELETE FROM SaverPacks WHERE packId = ?', [$surplus['packId']]);
+            q('DELETE FROM saverpacks WHERE packId = ?', [$surplus['packId']]);
         }
         $pdo->commit();
     } catch (Throwable $e) {
@@ -248,7 +248,7 @@ function services_set_status(array $in, ?array $admin): array
     $status = $v->bool('status');
     $v->check();
     [$row] = service_find($id);
-    q('UPDATE SaverPacks SET status = ?, updated_at = ? WHERE category_Id = ? AND subcategory = ?', [$status ? 1 : 0, now(), $row['category_id'], $row['name']]);
+    q('UPDATE saverpacks SET status = ?, updated_at = ? WHERE category_Id = ? AND subcategory = ?', [$status ? 1 : 0, now(), $row['category_id'], $row['name']]);
     return ok(['id' => $id, 'status' => $status], $row['name'] . ($status ? ' enabled.' : ' disabled.'));
 }
 
@@ -261,7 +261,7 @@ function services_delete(array $in, ?array $admin): array
     $pdo = db();
     $pdo->beginTransaction();
     try {
-        q('DELETE FROM SaverPacks WHERE category_Id = ? AND subcategory = ?', [$row['category_id'], $row['name']]);
+        q('DELETE FROM saverpacks WHERE category_Id = ? AND subcategory = ?', [$row['category_id'], $row['name']]);
         q('DELETE FROM area_services WHERE service_id = ?', [$id]);
         $pdo->commit();
     } catch (Throwable $e) {

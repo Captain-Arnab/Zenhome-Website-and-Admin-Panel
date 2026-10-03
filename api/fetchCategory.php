@@ -18,7 +18,7 @@ try {
 
     if ($id) {
         // Query to fetch data
-        $sql = "SELECT subcategory FROM SaverPacks WHERE category_id = :id";
+        $sql = "SELECT subcategory FROM saverpacks WHERE category_id = :id";
         $stmt = $pdo->prepare($sql);
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 

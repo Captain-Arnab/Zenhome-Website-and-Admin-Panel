@@ -221,7 +221,7 @@ function site_testimonials(int $min = 3, int $limit = 6): array
             "SELECT r.rating, r.feedback, r.created_at, u.first_name, u.last_name, b.category
              FROM ratings_feedback r
              LEFT JOIN users u ON u.ID = r.user_id
-             LEFT JOIN Service_booking b ON b.ID = r.unique_booking_id
+             LEFT JOIN service_booking b ON b.ID = r.unique_booking_id
              WHERE r.status = 'Approved' AND r.featured = 1 AND r.feedback IS NOT NULL AND r.feedback <> ''
              ORDER BY r.moderated_at DESC, r.created_at DESC LIMIT " . (int) $limit
         );

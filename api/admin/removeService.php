@@ -31,7 +31,7 @@ if (!$data || !isset($data['id'])) {
 $id = $data['id'];
 
 // Prepare SQL query to check if the category exists
-$checkSql = "SELECT COUNT(*) AS count FROM SERVICE_CATEGORY WHERE category_id = ?";
+$checkSql = "SELECT COUNT(*) AS count FROM service_category WHERE category_id = ?";
 $checkStmt = $conn->prepare($checkSql);
 $checkStmt->execute([$id]);
 $checkResult = $checkStmt->fetch(PDO::FETCH_ASSOC);
@@ -42,7 +42,7 @@ if ($checkResult['count'] == 0) {
 }
 
 // Prepare SQL query to delete data
-$sql = "DELETE FROM SERVICE_CATEGORY WHERE category_id = ?";
+$sql = "DELETE FROM service_category WHERE category_id = ?";
 $stmt = $conn->prepare($sql);
 
 // Execute the query with bound parameters

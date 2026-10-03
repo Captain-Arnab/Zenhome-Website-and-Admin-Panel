@@ -704,7 +704,7 @@ document.addEventListener("DOMContentLoaded", function () {
             button.dataset.url || "";
 
 
-        // SaverPacks id: the server prices the booking from it
+        // saverpacks id: the server prices the booking from it
         const packId =
             parseInt(button.dataset.packId, 10) || null;
 

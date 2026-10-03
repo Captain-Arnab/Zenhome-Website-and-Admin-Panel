@@ -71,7 +71,7 @@ function bookings_get(array $in, ?array $admin): array
                 'mobile'   => format_mobile($u['phone']),
                 'status'   => customer_is_active($u['status']),
                 'joined'   => $u['created_at'],
-                'bookings' => (int) q_value('SELECT COUNT(*) FROM Service_booking WHERE user_id = ?', [$u['ID']]),
+                'bookings' => (int) q_value('SELECT COUNT(*) FROM service_booking WHERE user_id = ?', [$u['ID']]),
             ];
         }
     }
@@ -110,7 +110,7 @@ function bookings_get(array $in, ?array $admin): array
 function bookings_history(array $in, ?array $admin): array
 {
     $id = (int) ($in['id'] ?? 0);
-    if (!$id || !q_value('SELECT 1 FROM Service_booking WHERE ID = ?', [$id])) {
+    if (!$id || !q_value('SELECT 1 FROM service_booking WHERE ID = ?', [$id])) {
         throw not_found('Booking');
     }
     return ok(['items' => bookings_timeline($id)]);
@@ -208,7 +208,7 @@ function bookings_assign(array $in, ?array $admin): array
     $pdo->beginTransaction();
     try {
         q(
-            'UPDATE Service_booking SET professional_id = ?, technician_name = ?, technician_phone = ?, status = ?, assigned_at = ?, updated_at = ? WHERE ID = ?',
+            'UPDATE service_booking SET professional_id = ?, technician_name = ?, technician_phone = ?, status = ?, assigned_at = ?, updated_at = ? WHERE ID = ?',
             [
                 $pro['id'], mb_substr($pro['full_name'], 0, 50), normalize_mobile($pro['mobile']) ?? mb_substr((string) $pro['mobile'], 0, 10),
                 booking_status_raw($newStatus), now(), now(), $bookingId,
@@ -262,7 +262,7 @@ function bookings_update_status(array $in, ?array $admin): array
     $pdo = db();
     $pdo->beginTransaction();
     try {
-        q('UPDATE Service_booking SET ' . implode(', ', $sets) . ' WHERE ID = ?', $params);
+        q('UPDATE service_booking SET ' . implode(', ', $sets) . ' WHERE ID = ?', $params);
         $historyId = booking_log_history($bookingId, 'status', $booking['status'], $status, $booking['professional_id'], $remarks, $admin);
         $pdo->commit();
     } catch (Throwable $e) {
@@ -296,7 +296,7 @@ function bookings_cancel(array $in, ?array $admin): array
     $pdo->beginTransaction();
     try {
         q(
-            'UPDATE Service_booking SET status = ?, cancel_reason = ?, cancelled_at = ?, updated_at = ? WHERE ID = ?',
+            'UPDATE service_booking SET status = ?, cancel_reason = ?, cancelled_at = ?, updated_at = ? WHERE ID = ?',
             [booking_status_raw('Cancelled'), mb_substr($reason . ($details !== '' ? ' - ' . $details : ''), 0, 255), now(), now(), $bookingId]
         );
         if ($booking['coupon_id']) {
@@ -363,7 +363,7 @@ function bookings_mark_paid(array $in, ?array $admin): array
 
     $amount = $booking['amount'];
     q(
-        "UPDATE Service_booking SET payment_method = 'Cash', payment_status = 'Paid', price = COALESCE(price, ?), updated_at = ? WHERE ID = ?",
+        "UPDATE service_booking SET payment_method = 'Cash', payment_status = 'Paid', price = COALESCE(price, ?), updated_at = ? WHERE ID = ?",
         [$amount > 0 ? (int) round($amount) : null, now(), $bookingId]
     );
     booking_log_history($bookingId, 'payment', $booking['status'], $booking['status'], $booking['professional_id'], 'Cash payment of Rs ' . number_format($amount, 2) . ' received.', $admin);

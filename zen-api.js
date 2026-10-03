@@ -386,7 +386,7 @@
     }
 
     /* Re-reads the cart from the live catalog (api/catalog_services.php):
-       current name, price and SaverPacks id for each service, and drops
+       current name, price and saverpacks id for each service, and drops
        services that were disabled or removed in the admin panel.
        Resolves with {cart, removed: [names]}; keeps the cart when offline. */
     function refreshCart() {

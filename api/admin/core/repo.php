@@ -30,7 +30,7 @@ function booking_select_sql(): string
             t.payment_mode AS txn_mode, t.refund_status AS txn_refund, t.created_at AS txn_date,
             " . booking_status_sql('b.status') . " AS canonical_status,
             " . booking_payment_status_sql() . " AS pay_status
-        FROM Service_booking b
+        FROM service_booking b
         LEFT JOIN users u ON u.ID = b.user_id
         LEFT JOIN service_partners p ON p.id = b.professional_id
         " . BOOKING_TXN_JOIN;
@@ -226,7 +226,7 @@ function booking_query(array $in, int $limit, int $offset, string $order = 'b.cr
 
     $sqlWhere = implode(' AND ', $where);
     $total = (int) q_value(
-        "SELECT COUNT(*) FROM Service_booking b
+        "SELECT COUNT(*) FROM service_booking b
          LEFT JOIN users u ON u.ID = b.user_id
          LEFT JOIN service_partners p ON p.id = b.professional_id
          " . BOOKING_TXN_JOIN . " WHERE $sqlWhere",
@@ -241,11 +241,11 @@ function booking_query(array $in, int $limit, int $offset, string $order = 'b.cr
 function booking_status_counts(string $extraWhere = '1 = 1', array $params = []): array
 {
     $counts = array_fill_keys(BOOKING_STATUSES, 0);
-    $rows = q_all('SELECT ' . booking_status_sql('b.status') . " AS s, COUNT(*) AS c FROM Service_booking b WHERE $extraWhere GROUP BY s", $params);
+    $rows = q_all('SELECT ' . booking_status_sql('b.status') . " AS s, COUNT(*) AS c FROM service_booking b WHERE $extraWhere GROUP BY s", $params);
     foreach ($rows as $row) {
         $counts[$row['s']] = (int) $row['c'];
     }
-    $counts['unassigned'] = (int) q_value('SELECT COUNT(*) FROM Service_booking b WHERE ' . booking_needs_assignment_sql('b') . " AND $extraWhere", $params);
+    $counts['unassigned'] = (int) q_value('SELECT COUNT(*) FROM service_booking b WHERE ' . booking_needs_assignment_sql('b') . " AND $extraWhere", $params);
     $counts['total'] = array_sum(array_intersect_key($counts, array_flip(BOOKING_STATUSES)));
     return $counts;
 }
@@ -274,7 +274,7 @@ function payment_totals(?string $from = null, ?string $to = null): array
     $rows = q_all(
         'SELECT b.price, b.subcategories, LOWER(COALESCE(b.payment_status, \'\')) AS ps, ' . booking_status_sql('b.status') . ' AS s,
                 COALESCE(DATE(b.completed_at), b.date, DATE(b.created_at)) AS d
-         FROM Service_booking b ' . BOOKING_TXN_JOIN . ' WHERE t.id IS NULL'
+         FROM service_booking b ' . BOOKING_TXN_JOIN . ' WHERE t.id IS NULL'
     );
     foreach ($rows as $r) {
         if (($from && $r['d'] < $from) || ($to && $r['d'] > $to)) {
@@ -325,14 +325,14 @@ function payment_union_sql(): string
                 CASE WHEN t.refund_status = 'Processed' THEN 'Refunded' WHEN t.status = 'success' THEN 'Paid' WHEN t.status = 'failed' THEN 'Failed' ELSE 'Pending' END AS pstatus,
                 t.refund_status AS refund_status, t.created_at AS pdate
             FROM transactions t
-            LEFT JOIN Service_booking b ON CONCAT('ZC-', b.unique_booking_id) = t.transaction_id
+            LEFT JOIN service_booking b ON CONCAT('ZC-', b.unique_booking_id) = t.transaction_id
         UNION ALL
         SELECT 'cash', b.ID, CONCAT('CASH-', b.ID), b.ID, b.unique_booking_id,
                 b.user_id, NULL, b.price, b.subcategories,
                 'Cash', 'Cash on service',
                 CASE WHEN LOWER(b.payment_status) = 'paid' THEN 'Paid' ELSE 'Pending' END,
                 NULL, COALESCE(b.completed_at, b.created_at)
-            FROM Service_booking b
+            FROM service_booking b
             LEFT JOIN transactions t ON t.transaction_id = CONCAT('ZC-', b.unique_booking_id)
             WHERE t.id IS NULL AND (LOWER(b.payment_status) = 'paid' OR " . booking_status_sql('b.status') . " <> 'Cancelled')";
 }
@@ -413,8 +413,8 @@ function resolve_category_id($value): ?int
         return null;
     }
     $id = ctype_digit((string) $value)
-        ? q_value('SELECT CATEGORY_ID FROM SERVICE_CATEGORY WHERE CATEGORY_ID = ?', [(int) $value])
-        : q_value('SELECT CATEGORY_ID FROM SERVICE_CATEGORY WHERE NAME = ?', [(string) $value]);
+        ? q_value('SELECT CATEGORY_ID FROM service_category WHERE CATEGORY_ID = ?', [(int) $value])
+        : q_value('SELECT CATEGORY_ID FROM service_category WHERE NAME = ?', [(string) $value]);
     return $id !== null ? (int) $id : null;
 }
 
@@ -462,10 +462,10 @@ function professional_select_sql(): string
     $active = "IN ('technician_assigned','technician assigned','assigned','ongoing','in progress','in_progress','started')";
     $done   = "IN ('service complete','completed','complete')";
     return "SELECT p.*,
-            (SELECT COUNT(*) FROM Service_booking b WHERE b.professional_id = p.id AND LOWER(TRIM(b.status)) $active) AS active_jobs,
-            (SELECT COUNT(*) FROM Service_booking b WHERE b.professional_id = p.id AND LOWER(TRIM(b.status)) $done) AS completed_jobs,
-            (SELECT AVG(r.rating) FROM ratings_feedback r JOIN Service_booking b ON b.ID = r.unique_booking_id WHERE b.professional_id = p.id) AS avg_rating,
-            (SELECT COUNT(*) FROM ratings_feedback r JOIN Service_booking b ON b.ID = r.unique_booking_id WHERE b.professional_id = p.id) AS review_count
+            (SELECT COUNT(*) FROM service_booking b WHERE b.professional_id = p.id AND LOWER(TRIM(b.status)) $active) AS active_jobs,
+            (SELECT COUNT(*) FROM service_booking b WHERE b.professional_id = p.id AND LOWER(TRIM(b.status)) $done) AS completed_jobs,
+            (SELECT AVG(r.rating) FROM ratings_feedback r JOIN service_booking b ON b.ID = r.unique_booking_id WHERE b.professional_id = p.id) AS avg_rating,
+            (SELECT COUNT(*) FROM ratings_feedback r JOIN service_booking b ON b.ID = r.unique_booking_id WHERE b.professional_id = p.id) AS review_count
         FROM service_partners p";
 }
 
@@ -515,13 +515,13 @@ function customer_audience(string $audience, array $in): array
         case 'no_booking_30':
         case 'inactive_30':
             $since = date('Y-m-d H:i:s', strtotime('-30 days'));
-            return [$map(q_all("$select WHERE NOT " . customer_inactive_sql() . ' AND NOT EXISTS (SELECT 1 FROM Service_booking b WHERE b.user_id = u.ID AND b.created_at >= ?)', [$since])), 'No booking in last 30 days'];
+            return [$map(q_all("$select WHERE NOT " . customer_inactive_sql() . ' AND NOT EXISTS (SELECT 1 FROM service_booking b WHERE b.user_id = u.ID AND b.created_at >= ?)', [$since])), 'No booking in last 30 days'];
         case 'city':
             $city = trim((string) ($in['city'] ?? ''));
             if ($city === '') {
                 throw new ApiException('Select a city.', 422, ['city' => 'Select a city.']);
             }
-            $rows = q_all("$select WHERE NOT " . customer_inactive_sql() . ' AND (u.address LIKE ? OR EXISTS (SELECT 1 FROM Service_booking b WHERE b.user_id = u.ID AND b.location LIKE ?))', ['%' . $city . '%', '%' . $city . '%']);
+            $rows = q_all("$select WHERE NOT " . customer_inactive_sql() . ' AND (u.address LIKE ? OR EXISTS (SELECT 1 FROM service_booking b WHERE b.user_id = u.ID AND b.location LIKE ?))', ['%' . $city . '%', '%' . $city . '%']);
             return [$map($rows), 'Customers in ' . $city];
         case 'booking':
         case 'single':
@@ -534,7 +534,7 @@ function customer_audience(string $audience, array $in): array
                 $rows = q_all("$select WHERE u.phone = ?", [$mobile]);
             } else {
                 $code = ltrim($target, '#');
-                $rows = q_all("$select JOIN Service_booking b ON b.user_id = u.ID WHERE b.unique_booking_id = ? OR b.ID = ? LIMIT 1", [$code, ctype_digit($code) ? (int) $code : 0]);
+                $rows = q_all("$select JOIN service_booking b ON b.user_id = u.ID WHERE b.unique_booking_id = ? OR b.ID = ? LIMIT 1", [$code, ctype_digit($code) ? (int) $code : 0]);
             }
             if (!$rows) {
                 throw new ApiException('No customer found for "' . $target . '".', 422, ['target' => 'No matching customer.']);

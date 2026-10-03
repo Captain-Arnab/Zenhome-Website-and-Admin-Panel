@@ -27,7 +27,7 @@ $uniqueBookingId = generateUniqueBookingId();
 
 /*
  * LEGACY_ASSIGN_STRICT=true in .env: assign only the booking given by
- * bookingId (Service_booking.ID) or uniqueBookingId, which must belong to
+ * bookingId (service_booking.ID) or uniqueBookingId, which must belong to
  * userId; keep its booking id; send the OTP by SMS and never return it.
  * Default (false): the original behaviour below (all of the customer's
  * bookings, OTP in the response).
@@ -47,8 +47,8 @@ if (env_flag('LEGACY_ASSIGN_STRICT')) {
     }
     try {
         $find = $conn->prepare($bookingId > 0
-            ? "SELECT ID, unique_booking_id FROM Service_booking WHERE ID = ? AND user_id = ?"
-            : "SELECT ID, unique_booking_id FROM Service_booking WHERE unique_booking_id = ? AND user_id = ?");
+            ? "SELECT ID, unique_booking_id FROM service_booking WHERE ID = ? AND user_id = ?"
+            : "SELECT ID, unique_booking_id FROM service_booking WHERE unique_booking_id = ? AND user_id = ?");
         $find->execute([$bookingId > 0 ? $bookingId : $uniqueRef, $userId]);
         $booking = $find->fetch(PDO::FETCH_ASSOC);
         if (!$booking) {
@@ -58,7 +58,7 @@ if (env_flag('LEGACY_ASSIGN_STRICT')) {
         }
         $bookingRef = (string) ($booking['unique_booking_id'] ?: $uniqueBookingId);
         $otp = generateOTP();
-        $conn->prepare("UPDATE Service_booking SET status = 'technician_assigned', technician_name = ?, technician_phone = ?, unique_booking_id = ?, otp = ? WHERE ID = ?")
+        $conn->prepare("UPDATE service_booking SET status = 'technician_assigned', technician_name = ?, technician_phone = ?, unique_booking_id = ?, otp = ? WHERE ID = ?")
             ->execute([$technicianName, $technicianPhone, $bookingRef, password_hash($otp, PASSWORD_DEFAULT), (int) $booking['ID']]);
     } catch (PDOException $e) {
         error_log('[assignTechnician] ' . $e->getMessage());
@@ -83,7 +83,7 @@ if (env_flag('LEGACY_ASSIGN_STRICT')) {
 }
 
 // Prepare SQL query to fetch confirmed bookings
-$sql = "SELECT * FROM Service_booking WHERE user_id = :userId";
+$sql = "SELECT * FROM service_booking WHERE user_id = :userId";
 $stmt = $conn->prepare($sql);
 $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
 
@@ -98,7 +98,7 @@ try {
     }
 
     // Prepare the UPDATE statement
-    $updateSql = "UPDATE Service_booking SET status = 'technician_assigned', technician_name = ?, technician_phone = ?, unique_booking_id = ? WHERE user_id = ?";
+    $updateSql = "UPDATE service_booking SET status = 'technician_assigned', technician_name = ?, technician_phone = ?, unique_booking_id = ? WHERE user_id = ?";
     $updateStmt = $conn->prepare($updateSql);
 
     // Execute the UPDATE statement
@@ -108,7 +108,7 @@ try {
 
         // Hash and store OTP
         $hashedOtp = password_hash($otp, PASSWORD_DEFAULT);
-        $otpSql = "UPDATE Service_booking SET otp = ? WHERE unique_booking_id = ?";
+        $otpSql = "UPDATE service_booking SET otp = ? WHERE unique_booking_id = ?";
         $otpStmt = $conn->prepare($otpSql);
         $otpStmt->execute([$hashedOtp, $uniqueBookingId]);
 

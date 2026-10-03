@@ -51,7 +51,7 @@ foreach ($data['subcategories'] as $subcategory) {
 $subcategories_json = json_encode($subcategories_data);
 
 // Prepare and execute SQL query
-$sql = "INSERT INTO Service_booking (category, subcategories, date, location, landmark, user_id, 
+$sql = "INSERT INTO service_booking (category, subcategories, date, location, landmark, user_id, 
                                      status, service_slot, created_at, price, technician_name) 
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 $stmt = $conn->prepare($sql);
@@ -72,7 +72,7 @@ $id = $conn->lastInsertId();
 $unique_booking_id = "SERVICY-" . str_pad($id, 5, '0', STR_PAD_LEFT); 
 
 // Optionally, update the record with the unique booking ID
-$update_sql = "UPDATE Service_booking SET unique_booking_id = ? WHERE id = ?";
+$update_sql = "UPDATE service_booking SET unique_booking_id = ? WHERE id = ?";
 $update_stmt = $conn->prepare($update_sql);
 $update_stmt->execute([$unique_booking_id, $id]);
 

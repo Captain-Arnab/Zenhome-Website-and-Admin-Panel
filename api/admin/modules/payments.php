@@ -114,7 +114,7 @@ function payments_refund_update(array $in, ?array $admin): array
             [$status, $amount ?? ($t['refund_amount'] ?? $t['amount']), $note !== '' ? $note : $t['refund_note'], $status === 'Processed' ? now() : null, $t['id']]
         );
     }
-    $booking = q_one("SELECT ID FROM Service_booking WHERE CONCAT('ZC-', unique_booking_id) = ?", [$txn]);
+    $booking = q_one("SELECT ID FROM service_booking WHERE CONCAT('ZC-', unique_booking_id) = ?", [$txn]);
     if ($booking) {
         q(
             'INSERT INTO booking_status_history (booking_id, event, note, changed_by, changed_by_name, created_at) VALUES (?, ?, ?, ?, ?, ?)',

@@ -109,7 +109,7 @@ function locations_areas(array $in, ?array $admin): array
         'id' => (int) $r['id'], 'name' => $r['name'], 'pincode' => $r['pincode'], 'city_id' => $r['city_id'] !== null ? (int) $r['city_id'] : null,
         'city' => (string) ($r['city_name'] ?? ''), 'status' => (int) $r['status'] === 1, 'services' => (int) $r['services'], 'order' => (int) $r['sort_order'],
     ], $rows);
-    return ok(paginated($items, $total, $page, $limit, ['total_services' => (int) q_value('SELECT COUNT(DISTINCT category_Id, subcategory) FROM SaverPacks')]));
+    return ok(paginated($items, $total, $page, $limit, ['total_services' => (int) q_value('SELECT COUNT(DISTINCT category_Id, subcategory) FROM saverpacks')]));
 }
 
 function locations_area_save(array $in, ?array $admin): array
@@ -235,7 +235,7 @@ function locations_map_save(array $in, ?array $admin): array
         throw new ApiException('Area not found.', 422, ['area' => 'Select an area.']);
     }
     if ($serviceIds) {
-        $valid = array_map('intval', array_column(q_all('SELECT MIN(packId) AS id FROM SaverPacks GROUP BY category_Id, subcategory'), 'id'));
+        $valid = array_map('intval', array_column(q_all('SELECT MIN(packId) AS id FROM saverpacks GROUP BY category_Id, subcategory'), 'id'));
         $serviceIds = array_values(array_intersect($serviceIds, $valid));
     }
     $pdo = db();

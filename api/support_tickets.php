@@ -56,7 +56,7 @@ function support_ticket_out(array $t): array
 /** Own ticket or 404 (never reveals other customers' tickets). */
 function support_find(PDO $conn, int $id, int $userId): array
 {
-    $stmt = $conn->prepare('SELECT t.*, b.unique_booking_id AS booking_code FROM support_tickets t LEFT JOIN Service_booking b ON b.ID = t.booking_id WHERE t.id = ? AND t.user_id = ?');
+    $stmt = $conn->prepare('SELECT t.*, b.unique_booking_id AS booking_code FROM support_tickets t LEFT JOIN service_booking b ON b.ID = t.booking_id WHERE t.id = ? AND t.user_id = ?');
     $stmt->execute([$id, $userId]);
     $row = $stmt->fetch();
     if (!$row) {
@@ -105,7 +105,7 @@ try {
                 "SELECT t.*, b.unique_booking_id AS booking_code,
                         (SELECT COUNT(*) FROM support_ticket_messages m WHERE m.ticket_id = t.id AND m.sender_type = 'admin') AS admin_replies,
                         (SELECT MAX(m.created_at) FROM support_ticket_messages m WHERE m.ticket_id = t.id AND m.sender_type = 'admin') AS last_admin_reply
-                 FROM support_tickets t LEFT JOIN Service_booking b ON b.ID = t.booking_id
+                 FROM support_tickets t LEFT JOIN service_booking b ON b.ID = t.booking_id
                  WHERE $where ORDER BY COALESCE(t.updated_at, t.created_at) DESC, t.id DESC LIMIT $limit OFFSET $offset"
             );
             $stmt->execute($params);
@@ -138,7 +138,7 @@ try {
             }
             $bookingId = null;
             if ($bookingRef !== '') {
-                $stmt = $conn->prepare('SELECT ID FROM Service_booking WHERE user_id = ? AND (unique_booking_id = ? OR ID = ?) LIMIT 1');
+                $stmt = $conn->prepare('SELECT ID FROM service_booking WHERE user_id = ? AND (unique_booking_id = ? OR ID = ?) LIMIT 1');
                 $stmt->execute([$userId, $bookingRef, ctype_digit($bookingRef) ? (int) $bookingRef : 0]);
                 $bookingId = $stmt->fetchColumn() ?: null;
                 if (!$bookingId) {

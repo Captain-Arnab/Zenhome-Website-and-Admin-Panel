@@ -33,7 +33,7 @@ function tickets_from_sql(): string
 {
     return 'FROM support_tickets t
         LEFT JOIN users u ON u.ID = t.user_id
-        LEFT JOIN Service_booking b ON b.ID = t.booking_id';
+        LEFT JOIN service_booking b ON b.ID = t.booking_id';
 }
 
 function tickets_select_sql(): string

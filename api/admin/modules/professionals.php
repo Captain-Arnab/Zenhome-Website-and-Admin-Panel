@@ -110,7 +110,7 @@ function professionals_jobs(array $in, ?array $admin): array
     if ($jobs === 'current') {
         $params = [];
         $where = '(' . booking_status_where('Assigned', $params) . ' OR ' . booking_status_where('Ongoing', $params) . ')';
-        $total = (int) q_value("SELECT COUNT(*) FROM Service_booking b WHERE b.professional_id = ? AND $where", array_merge([$id], $params));
+        $total = (int) q_value("SELECT COUNT(*) FROM service_booking b WHERE b.professional_id = ? AND $where", array_merge([$id], $params));
         $rows = q_all(booking_select_sql() . " WHERE b.professional_id = ? AND $where ORDER BY b.date ASC LIMIT $limit OFFSET $offset", array_merge([$id], $params));
         return ok(paginated(array_map('booking_row', $rows), $total, $page, $limit));
     }
@@ -160,7 +160,7 @@ function professionals_save(array $in, ?array $admin): array
         q('UPDATE service_partners SET full_name = ?, mobile = ?, primary_category = ?, serviceable_areas = ?, remarks = ?, status = ?, updated_at = ? WHERE id = ?', array_merge($values, [$id]));
         if ($existing['full_name'] !== $name || $existing['mobile'] !== $mobile) {
             // Customer app reads the technician from the booking row.
-            q('UPDATE Service_booking SET technician_name = ?, technician_phone = ? WHERE professional_id = ?', [mb_substr($name, 0, 50), $mobile, $id]);
+            q('UPDATE service_booking SET technician_name = ?, technician_phone = ? WHERE professional_id = ?', [mb_substr($name, 0, 50), $mobile, $id]);
         }
     } else {
         q('INSERT INTO service_partners (full_name, mobile, primary_category, serviceable_areas, remarks, status, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)', $values);
@@ -190,7 +190,7 @@ function professionals_delete(array $in, ?array $admin): array
     $id = $v->int('id', 'Professional', ['required' => true, 'min' => 1]);
     $v->check();
     $row = professional_find($id);
-    if ((int) q_value('SELECT COUNT(*) FROM Service_booking WHERE professional_id = ?', [$id]) > 0) {
+    if ((int) q_value('SELECT COUNT(*) FROM service_booking WHERE professional_id = ?', [$id]) > 0) {
         throw new ApiException('This professional has bookings in their history. Deactivate them instead of deleting.', 409);
     }
     q('DELETE FROM service_partners WHERE id = ?', [$id]);

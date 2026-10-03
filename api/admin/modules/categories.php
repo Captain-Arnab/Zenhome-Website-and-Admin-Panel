@@ -1,6 +1,6 @@
 <?php
 /**
- * Service categories (SERVICE_CATEGORY, also read by api/category.php).
+ * Service categories (service_category, also read by api/category.php).
  * IMAGE keeps legacy bare filenames for the apps; new uploads store a
  * relative path. The website fields (slug, web_image, cover_image,
  * web_icon, tagline, web_label, page_title, highlights) only drive the
@@ -48,8 +48,8 @@ function categories_select_sql(): string
             c.slug, c.web_image, c.cover_image, c.web_icon, c.tagline, c.web_label, c.page_title, c.highlights,
             c.long_description, c.why_html, c.process_html, c.cta_html, c.faqs,
             (SELECT COUNT(*) FROM service_subcategories s WHERE s.category_id = c.CATEGORY_ID) AS sub_count,
-            (SELECT COUNT(DISTINCT sp.subcategory) FROM SaverPacks sp WHERE sp.category_Id = c.CATEGORY_ID) AS service_count
-        FROM SERVICE_CATEGORY c';
+            (SELECT COUNT(DISTINCT sp.subcategory) FROM saverpacks sp WHERE sp.category_Id = c.CATEGORY_ID) AS service_count
+        FROM service_category c';
 }
 
 function categories_list(array $in, ?array $admin): array
@@ -66,7 +66,7 @@ function categories_list(array $in, ?array $admin): array
         $params[] = $status === 'active' ? 1 : 0;
     }
     $sqlWhere = implode(' AND ', $where);
-    $total = (int) q_value("SELECT COUNT(*) FROM SERVICE_CATEGORY c WHERE $sqlWhere", $params);
+    $total = (int) q_value("SELECT COUNT(*) FROM service_category c WHERE $sqlWhere", $params);
     $rows = q_all(categories_select_sql() . " WHERE $sqlWhere ORDER BY c.sort_order, c.NAME LIMIT $limit OFFSET $offset", $params);
     return ok(paginated(array_map('category_row', $rows), $total, $page, $limit));
 }
@@ -74,7 +74,7 @@ function categories_list(array $in, ?array $admin): array
 /** id/name pairs for dropdowns. */
 function categories_options(array $in, ?array $admin): array
 {
-    $rows = q_all('SELECT CATEGORY_ID AS id, NAME AS name, status FROM SERVICE_CATEGORY ORDER BY sort_order, NAME');
+    $rows = q_all('SELECT CATEGORY_ID AS id, NAME AS name, status FROM service_category ORDER BY sort_order, NAME');
     return ok(['items' => array_map(fn($r) => ['id' => (int) $r['id'], 'name' => $r['name'], 'status' => (int) $r['status'] === 1], $rows)]);
 }
 
@@ -161,14 +161,14 @@ function categories_save(array $in, ?array $admin): array
     if ($existing && !array_key_exists('faqs', $in)) {
         $faqs = $existing['faqs'];
     }
-    if (q_value('SELECT 1 FROM SERVICE_CATEGORY WHERE LOWER(NAME) = LOWER(?) AND CATEGORY_ID <> ?', [$name, $id ?? 0])) {
+    if (q_value('SELECT 1 FROM service_category WHERE LOWER(NAME) = LOWER(?) AND CATEGORY_ID <> ?', [$name, $id ?? 0])) {
         throw new ApiException('A category with this name already exists.', 422, ['name' => 'Name already used.']);
     }
     $slug = $slug !== '' ? $slug : ((string) ($existing['slug'] ?? '') ?: slugify($name));
     if ($existing && in_array((string) $existing['slug'], CATALOG_PAGES, true) && $slug !== $existing['slug']) {
         throw new ApiException('This category has its own website page (' . $existing['slug'] . '.php), so its URL slug cannot be changed.', 422, ['slug' => 'Fixed for this category.']);
     }
-    if ($slug === '' || q_value('SELECT 1 FROM SERVICE_CATEGORY WHERE slug = ? AND CATEGORY_ID <> ?', [$slug, $id ?? 0])) {
+    if ($slug === '' || q_value('SELECT 1 FROM service_category WHERE slug = ? AND CATEGORY_ID <> ?', [$slug, $id ?? 0])) {
         throw new ApiException('This URL slug is already used by another category.', 422, ['slug' => 'Choose a different slug.']);
     }
     if (strlen(trim((string) $highlights)) > 255) {
@@ -200,7 +200,7 @@ function categories_save(array $in, ?array $admin): array
             $params[] = $cover;
         }
         $params[] = $id;
-        q("UPDATE SERVICE_CATEGORY SET $sets WHERE CATEGORY_ID = ?", $params);
+        q("UPDATE service_category SET $sets WHERE CATEGORY_ID = ?", $params);
         if ($image) {
             delete_uploaded_image($existing['IMAGE']);
             if ($existing['web_image'] !== $existing['IMAGE']) {
@@ -213,7 +213,7 @@ function categories_save(array $in, ?array $admin): array
         $message = 'Category updated.';
     } else {
         q(
-            'INSERT INTO SERVICE_CATEGORY (NAME, IMAGE, icon, sort_order, description, status, updated_at, slug, web_icon, tagline, web_label, page_title, highlights, long_description, why_html, process_html, cta_html, faqs, web_image, cover_image)
+            'INSERT INTO service_category (NAME, IMAGE, icon, sort_order, description, status, updated_at, slug, web_icon, tagline, web_label, page_title, highlights, long_description, why_html, process_html, cta_html, faqs, web_image, cover_image)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             array_merge([$name, $image ?? '', $icon ?: null, $order, $desc ?: null, $status ? 1 : 0, now()], $web, [$image, $cover])
         );
@@ -230,11 +230,11 @@ function categories_set_status(array $in, ?array $admin): array
     $status = $v->bool('status');
     $v->check();
     $row = category_find($id);
-    q('UPDATE SERVICE_CATEGORY SET status = ?, updated_at = ? WHERE CATEGORY_ID = ?', [$status ? 1 : 0, now(), $id]);
+    q('UPDATE service_category SET status = ?, updated_at = ? WHERE CATEGORY_ID = ?', [$status ? 1 : 0, now(), $id]);
     return ok(['id' => $id, 'status' => $status], $row['NAME'] . ($status ? ' activated.' : ' deactivated.'));
 }
 
-/** SaverPacks rows cascade-delete with their category, so refuse when in use. */
+/** saverpacks rows cascade-delete with their category, so refuse when in use. */
 function categories_delete(array $in, ?array $admin): array
 {
     $v = new Validator($in);
@@ -244,7 +244,7 @@ function categories_delete(array $in, ?array $admin): array
     if ((int) $row['service_count'] > 0 || (int) $row['sub_count'] > 0) {
         throw new ApiException('Move or delete this category\'s services and subcategories first (or deactivate it instead).', 409);
     }
-    q('DELETE FROM SERVICE_CATEGORY WHERE CATEGORY_ID = ?', [$id]);
+    q('DELETE FROM service_category WHERE CATEGORY_ID = ?', [$id]);
     foreach (array_unique(array_filter([$row['IMAGE'], $row['web_image'], $row['cover_image']])) as $file) {
         delete_uploaded_image($file);
     }

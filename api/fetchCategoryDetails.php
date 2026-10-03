@@ -15,7 +15,7 @@ try {
 
     if ($id) {
         // Query to fetch data
-        $sql = "SELECT * FROM SaverPacks WHERE packid = :id";
+        $sql = "SELECT * FROM saverpacks WHERE packid = :id";
         $stmt = $pdo->prepare($sql);
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
