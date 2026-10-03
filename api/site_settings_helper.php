@@ -28,7 +28,7 @@ const SITE_SETTING_DEFS = [
     'trust_item_2'        => ['Trust strip 2 (title / text)', 'textarea', 'Footer', "Easy Booking\nQuick and convenient", true, ''],
     'trust_item_3'        => ['Trust strip 3 (title / text)', 'textarea', 'Footer', "Doorstep Service\nAt your preferred location", true, ''],
     'trust_item_4'        => ['Trust strip 4 (title / text)', 'textarea', 'Footer', "Customer Support\nWe're here to assist you", true, ''],
-    'company_name'  => ['Company name', 'text', 'Footer', 'Zen Care Services', true, 'Shown in the footer and copyright line.'],
+    'company_name'  => ['Company name', 'text', 'Footer', 'Zen Home Experts', true, 'Shown in the footer and copyright line.'],
     'phone'         => ['Phone number', 'phone', 'Contact', '8179550262', true, 'Main booking number (header, footer, service pages).'],
     'support_phone' => ['Support line', 'phone', 'Contact', '8179550262', true, 'The "Need Help?" and "Call for Assistance" number in the header and mobile menu.'],
     'email'         => ['Email address', 'email', 'Contact', 'zencareservices@gmail.com', true, ''],
@@ -41,7 +41,7 @@ const SITE_SETTING_DEFS = [
     'youtube_url'   => ['YouTube channel', 'url', 'Social & Apps', '', false, ''],
     'play_store_url'=> ['Google Play link', 'url', 'Social & Apps', '', false, 'Leave empty to hide the Google Play button.'],
     'app_store_url' => ['App Store link', 'url', 'Social & Apps', '', false, 'Leave empty to hide the App Store button.'],
-    'app_qr_link'   => ['QR code link', 'url', 'Social & Apps', 'https://zencareservices.com/', false, 'Used to draw the homepage QR code when no QR image is uploaded.'],
+    'app_qr_link'   => ['QR code link', 'url', 'Social & Apps', 'https://zenhomeexperts.com/', false, 'Used to draw the homepage QR code when no QR image is uploaded.'],
     'app_qr_image'  => ['App QR image', 'image', 'Social & Apps', '', false, 'Optional. Replaces the generated QR code.'],
     'footer_text'   => ['Footer about text', 'textarea', 'Footer', 'Reliable home services delivered by trained professionals. From appliance repair and cleaning to pest control, carpentry and salon services, we make home care simple and convenient.', true, ''],
     'logo'          => ['Logo', 'image', 'Branding & Images', 'images/logo.png', true, 'Header logo. PNG with a transparent background works best.'],
@@ -87,7 +87,7 @@ function site_settings(): array
         $pdo = site_content_db();
         $stored = $pdo ? site_settings_stored($pdo) : [];
     } catch (Throwable $e) {
-        error_log('[ZenCare site settings] ' . $e->getMessage());
+        error_log('[ZenHomeExperts site settings] ' . $e->getMessage());
     }
     return $cache = site_settings_resolve($stored);
 }

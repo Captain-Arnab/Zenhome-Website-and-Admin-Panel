@@ -3,8 +3,8 @@
 require_once __DIR__ . '/api/site_content.php';
 $cms = site_page_content('faq');
 $siteMeta = [
-    'title' => $cms ? ($cms['meta_title'] ?: $cms['title'] . ' | Zen Care Services') : 'FAQs | Zen Care Services',
-    'description' => $cms['meta_description'] ?? 'Answers to common questions about booking, payments, rescheduling and Zen Care home services.',
+    'title' => $cms ? ($cms['meta_title'] ?: $cms['title'] . ' | Zen Home Experts') : 'FAQs | Zen Home Experts',
+    'description' => $cms['meta_description'] ?? 'Answers to common questions about booking, payments, rescheduling and Zen Home Experts home services.',
 ];
 include('header.php');
 ?>
@@ -23,7 +23,7 @@ include('header.php');
         <div class="zcs-ac-banner-content">
 
             <span class="zcs-ac-banner-label">
-                ZEN CARE SERVICES
+                ZEN HOME EXPERTS
             </span>
 
             <h1>
@@ -149,7 +149,7 @@ include('header.php');
                 </h2>
 
                 <p>
-                    Contact Zen Care Services for help with bookings,
+                    Contact Zen Home Experts for help with bookings,
                     payments, refunds, service policies or your account.
                 </p>
 

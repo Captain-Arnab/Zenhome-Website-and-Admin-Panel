@@ -39,3 +39,12 @@ define('ZC_RUNTIME', true);
         ini_set('error_log', $dir . '/php_errors.log');
     }
 })();
+
+if (!function_exists('app_url')) {
+    /** Canonical site base URL (APP_URL in .env). One place to change the domain. */
+    function app_url(string $path = ''): string
+    {
+        $base = $_ENV['APP_URL'] ?? $_SERVER['APP_URL'] ?? getenv('APP_URL') ?: 'https://zenhomeexperts.com';
+        return rtrim((string) $base, '/') . ($path !== '' ? '/' . ltrim($path, '/') : '');
+    }
+}

@@ -81,7 +81,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
 
 
                 <p>
-                    Zen Care Services provides professional home cleaning
+                    Zen Home Experts provides professional home cleaning
                     for furnished and unfurnished apartments, independent
                     homes and bathrooms.
                 </p>
@@ -219,7 +219,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
 
 
 <!-- ======================================================
-     WHY CHOOSE ZEN CARE
+     WHY CHOOSE ZEN HOME EXPERTS
 ====================================================== -->
 
 <section class="zcs-ac-why">
@@ -230,7 +230,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
         <div class="zcs-ac-heading">
 
             <span>
-                WHY CHOOSE ZEN CARE
+                WHY CHOOSE ZEN HOME EXPERTS
             </span>
 
             <h2>
@@ -355,7 +355,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
             <div class="zcs-ac-process-heading">
 
                 <span class="zcs-ac-section-label">
-                    HOW ZEN CARE WORKS
+                    HOW ZEN HOME EXPERTS WORKS
                 </span>
 
                 <h2>
@@ -368,7 +368,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
                 <p>
                     Choose the cleaning service you need,
                     select your preferred time and let
-                    Zen Care handle the rest.
+                    Zen Home Experts handle the rest.
                 </p>
 
                 <?php endif; ?>
@@ -502,7 +502,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
                 <?php if (!catalog_render_section($catalogCategory, 'cta_html')): ?>
 
                 <p>
-                    Schedule your Zen Care home cleaning service
+                    Schedule your Zen Home Experts home cleaning service
                     today and enjoy a cleaner, fresher living space.
                 </p>
 

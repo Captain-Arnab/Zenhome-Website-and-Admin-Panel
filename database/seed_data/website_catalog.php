@@ -804,7 +804,7 @@ return [
     'banners' => [
         [
             'key' => 'homepage-hero',
-            'title' => 'Zen Care Professional Service',
+            'title' => 'Zen Home Experts Professional Service',
             'placement' => 'Homepage Hero',
             'image' => 'images/ac-installation-service.png',
             'link' => 'services.php',

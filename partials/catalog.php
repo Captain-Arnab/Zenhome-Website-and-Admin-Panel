@@ -16,11 +16,11 @@ function catalog_page_category($key): ?array
     $category = site_catalog_category($key);
     if (!$category) {
         http_response_code(404);
-        $GLOBALS['siteMeta'] = ['title' => 'Service unavailable | Zen Care Services'];
+        $GLOBALS['siteMeta'] = ['title' => 'Service unavailable | Zen Home Experts'];
         return null;
     }
     $GLOBALS['siteMeta'] = [
-        'title'       => $category['title'] . ' | Zen Care Services',
+        'title'       => $category['title'] . ' | Zen Home Experts',
         'description' => $category['description'],
     ];
     return $category;
@@ -55,7 +55,7 @@ function catalog_render_banner(array $category): void
         <div class="zcs-ac-banner-content">
 
             <span class="zcs-ac-banner-label">
-                ZEN CARE HOME SERVICES
+                ZEN HOME EXPERTS HOME SERVICES
             </span>
 
             <h1><?= site_e($category['title']) ?></h1>

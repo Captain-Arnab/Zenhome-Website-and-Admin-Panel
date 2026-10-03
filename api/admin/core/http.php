@@ -92,11 +92,11 @@ function api_serve(string $module): void
     } catch (ApiException $e) {
         api_respond($e->getCode() ?: 400, 'error', $e->getMessage(), null, $e->errors);
     } catch (PDOException $e) {
-        error_log('[ZenCare admin API] ' . $module . ': ' . $e->getMessage());
+        error_log('[ZenHomeExperts admin API] ' . $module . ': ' . $e->getMessage());
         $duplicate = ($e->errorInfo[1] ?? 0) == 1062;
         api_respond($duplicate ? 409 : 500, 'error', $duplicate ? 'A record with the same value already exists.' : 'Database error. Please try again.');
     } catch (Throwable $e) {
-        error_log('[ZenCare admin API] ' . $module . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+        error_log('[ZenHomeExperts admin API] ' . $module . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
         api_respond(500, 'error', 'Server error. Please try again.');
     }
 }

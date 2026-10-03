@@ -30,7 +30,7 @@ function legacy_db(): ?PDO
         try {
             include __DIR__ . '/db.php';
         } catch (Throwable $e) {
-            error_log('[ZenCare legacy] db: ' . $e->getMessage());
+            error_log('[ZenHomeExperts legacy] db: ' . $e->getMessage());
         }
         ob_end_clean();
         if (isset($conn) && $conn instanceof PDO) {
@@ -81,7 +81,7 @@ function legacy_log(string $endpoint, string $tokenState, ?int $userId, string $
         ]);
         return (int) $pdo->lastInsertId();
     } catch (Throwable $e) {
-        error_log('[ZenCare legacy] log: ' . $e->getMessage());
+        error_log('[ZenHomeExperts legacy] log: ' . $e->getMessage());
         return null;
     }
 }
@@ -95,7 +95,7 @@ function legacy_log_outcome(array $ctx, string $outcome): void
     try {
         $pdo->prepare('UPDATE legacy_access_log SET outcome = ? WHERE id = ?')->execute([$outcome, $ctx['log_id']]);
     } catch (Throwable $e) {
-        error_log('[ZenCare legacy] log: ' . $e->getMessage());
+        error_log('[ZenHomeExperts legacy] log: ' . $e->getMessage());
     }
 }
 
@@ -117,7 +117,7 @@ function legacy_access(string $endpoint): array
                 $userId = (int) $auth['user_id'];
             }
         } catch (Throwable $e) {
-            error_log('[ZenCare legacy] auth: ' . $e->getMessage());
+            error_log('[ZenHomeExperts legacy] auth: ' . $e->getMessage());
         }
     }
     $ctx = [

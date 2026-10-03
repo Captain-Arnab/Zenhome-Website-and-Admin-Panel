@@ -2,7 +2,7 @@
 // Published text from Admin > CMS Pages replaces the built-in text below.
 require_once __DIR__ . '/api/site_content.php';
 $cms = site_page_content('privacy-policy');
-$siteMeta = $cms ? ['title' => $cms['meta_title'] ?: $cms['title'] . ' | Zen Care Services', 'description' => $cms['meta_description']] : [];
+$siteMeta = $cms ? ['title' => $cms['meta_title'] ?: $cms['title'] . ' | Zen Home Experts', 'description' => $cms['meta_description']] : [];
 include('header.php');
 ?>
 
@@ -20,7 +20,7 @@ include('header.php');
         <div class="zcs-ac-banner-content">
 
             <span class="zcs-ac-banner-label">
-                ZEN CARE SERVICES
+                ZEN HOME EXPERTS
             </span>
 
             <h1>
@@ -28,7 +28,7 @@ include('header.php');
             </h1>
 
             <p>
-                Learn how Zen Care collects, uses and safeguards your
+                Learn how Zen Home Experts collects, uses and safeguards your
                 personal information when you use our platform and services.
             </p>
 
@@ -99,7 +99,7 @@ include('header.php');
             </h2>
 
             <p>
-                Zen Care ("Company", "we", "us", or "our") values your
+                Zen Home Experts ("Company", "we", "us", or "our") values your
                 privacy and is committed to protecting your personal data.
                 This Privacy Policy outlines how we collect, use, disclose,
                 and safeguard your information when you use our website,
@@ -107,7 +107,7 @@ include('header.php');
             </p>
 
             <p>
-                By accessing or using Zen Care services, you agree to this
+                By accessing or using Zen Home Experts services, you agree to this
                 Privacy Policy. If you do not agree, please discontinue
                 using our platform.
             </p>
@@ -313,7 +313,7 @@ include('header.php');
 
 
                 <p>
-                    By using Zen Care, you acknowledge that you have read,
+                    By using Zen Home Experts, you acknowledge that you have read,
                     understood, and agreed to this Privacy Policy.
                 </p>
 
@@ -352,7 +352,7 @@ include('header.php');
                 </h2>
 
                 <p>
-                    Contact Zen Care Services for assistance with privacy
+                    Contact Zen Home Experts for assistance with privacy
                     concerns, personal information, data requests or
                     account-related questions.
                 </p>

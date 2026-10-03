@@ -41,7 +41,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
             </div>
 
             <div class="zcs-ac-intro-content">
-                <span class="zcs-ac-section-label"><?= site_e($catalogCategory['label'] !== '' ? $catalogCategory['label'] : 'ZEN CARE SERVICES') ?></span>
+                <span class="zcs-ac-section-label"><?= site_e($catalogCategory['label'] !== '' ? $catalogCategory['label'] : 'ZEN HOME EXPERTS') ?></span>
                 <h2>
                     <?= site_e($catalogCategory['name']) ?>
                     <strong>at Your Doorstep.</strong>
@@ -50,7 +50,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
                     <?php if ($catalogCategory['description'] !== ''): ?>
                         <p><?= site_e($catalogCategory['description']) ?></p>
                     <?php endif; ?>
-                    <p>Book online and a verified Zen Care professional will visit at your chosen time slot.</p>
+                    <p>Book online and a verified Zen Home Experts professional will visit at your chosen time slot.</p>
                 <?php endif; ?>
 
                 <?php if ($catalogCategory['highlights']): ?>
@@ -95,8 +95,8 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
     </div>
 </section>
 
-<?php catalog_render_generic_section($catalogCategory, 'why_html', 'why', 'WHY CHOOSE ZEN CARE', 'Reliable Service. Better Experience.'); ?>
-<?php catalog_render_generic_section($catalogCategory, 'process_html', 'process', 'HOW ZEN CARE WORKS', 'Booking Made Simple.'); ?>
+<?php catalog_render_generic_section($catalogCategory, 'why_html', 'why', 'WHY CHOOSE ZEN HOME EXPERTS', 'Reliable Service. Better Experience.'); ?>
+<?php catalog_render_generic_section($catalogCategory, 'process_html', 'process', 'HOW ZEN HOME EXPERTS WORKS', 'Booking Made Simple.'); ?>
 <?php catalog_render_generic_section($catalogCategory, 'cta_html', 'cta', 'NEED THIS SERVICE?', 'Book at Your Doorstep.'); ?>
 
 <?php catalog_render_faqs($catalogCategory); ?>

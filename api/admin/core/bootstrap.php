@@ -55,7 +55,7 @@ function db(): PDO
     require ZC_ROOT . '/api/db.php';
     $output = trim(ob_get_clean());
     if (!isset($conn) || !$conn instanceof PDO) {
-        error_log('[ZenCare admin API] DB connection failed: ' . $output);
+        error_log('[ZenHomeExperts admin API] DB connection failed: ' . $output);
         throw new ApiException('Database connection failed.', 500);
     }
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

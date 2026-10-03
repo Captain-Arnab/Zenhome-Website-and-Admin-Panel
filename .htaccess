@@ -1,3 +1,21 @@
+# Canonical host/scheme for zenhomeexperts.com: www -> non-www, http -> https.
+# Guarded by HTTP_HOST so localhost/XAMPP (no Host match) is never redirected.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Uncomment and fill in once the old domain(s) are decommissioned, to 301
+    # any remaining traffic/backlinks over to the new domain, e.g.:
+    # RewriteCond %{HTTP_HOST} ^(www\.)?zencareservice(s)?\.com$ [NC]
+    # RewriteRule ^(.*)$ https://zenhomeexperts.com/$1 [R=301,L]
+
+    RewriteCond %{HTTP_HOST} ^www\.zenhomeexperts\.com$ [NC]
+    RewriteRule ^(.*)$ https://zenhomeexperts.com/$1 [R=301,L]
+
+    RewriteCond %{HTTP_HOST} ^zenhomeexperts\.com$ [NC]
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://zenhomeexperts.com/$1 [R=301,L]
+</IfModule>
+
 # Secrets, database dumps, backups, logs, docs and dependency manifests: never served over HTTP.
 <FilesMatch "(^\.|\.(?i:env|sql|bak|old|orig|log|ini|lock|md|dist|swp|tmp|zip|tar|gz|tgz|7z|rar)$|^(composer|package)(-lock)?\.json$)">
     <IfModule mod_authz_core.c>

@@ -1,5 +1,5 @@
 <?php
-$siteMeta = ['title' => 'My Bookings | Zen Care Services'];
+$siteMeta = ['title' => 'My Bookings | Zen Home Experts'];
 include 'header.php';
 ?>
 
@@ -17,7 +17,7 @@ include 'header.php';
         <div class="zcs-ac-banner-content">
 
             <span class="zcs-ac-banner-label">
-                ZEN CARE HOME SERVICES
+                ZEN HOME EXPERTS HOME SERVICES
             </span>
 
             <h1>
@@ -25,7 +25,7 @@ include 'header.php';
             </h1>
 
             <p>
-                Track your Zen Care service bookings, technician
+                Track your Zen Home Experts service bookings, technician
                 details and payment status.
             </p>
 

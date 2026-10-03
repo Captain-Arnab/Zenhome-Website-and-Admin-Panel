@@ -1,4 +1,4 @@
-# Zen Care – deployment guide
+# Zen Home Experts – deployment guide
 
 Website (PHP pages in the project root), customer/app API (`api/`), admin
 panel (`admin/` + `api/admin/`). PHP 8.1+ (tested on 8.2) and MySQL/MariaDB.
@@ -46,8 +46,9 @@ so a persistent worker keeps serving the old values until it restarts.
 |---|---|---|
 | `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | yes | Database (used by `api/db.php` and every endpoint) |
 | `PHONEPE_CLIENT_ID`, `PHONEPE_CLIENT_SECRET`, `PHONEPE_CLIENT_VERSION`, `PHONEPE_ENV`, `PHONEPE_MERCHANT_ID` | yes | PhonePe v2 checkout (`api/phonepe_client.php`) |
+| `APP_URL` | yes | Canonical site base URL (`https://zenhomeexperts.com`), the one place to change the domain - `api/runtime.php`'s `app_url()` helper reads it |
 | `PHONEPE_REDIRECT_URL`, `PAYMENT_CALLBACK_BASE_URL` | yes | Payment return URLs |
-| `PHONEPE_WEBHOOK_USERNAME`, `PHONEPE_WEBHOOK_PASSWORD` | yes (for webhooks) | Must match the username/password set in the PhonePe dashboard (Developer Settings > Webhook, Authentication Type: SHA); verified by `api/payment_webhook.php` |
+| `PHONEPE_WEBHOOK_USERNAME`, `PHONEPE_WEBHOOK_PASSWORD` | yes (for webhooks) | Must match the username/password set in the PhonePe dashboard (Developer Settings > Webhook, Authentication Type: SHA); verified by `api/payment_webhook.php`. Webhook URL to register: `https://zenhomeexperts.com/api/payment_webhook.php` (update this in the PhonePe dashboard yourself - the app never calls PhonePe to change it) |
 | `APP_TIMEZONE` | recommended | e.g. `Asia/Kolkata` |
 | `ADMIN_SECRET` | optional | `Admin-Token` header for the old `api/admin/*.php` endpoints; empty = disabled |
 | `SMS_ENABLED`, `SMS_GATEWAY_URL`, `SMS_GATEWAY_USER`, `SMS_GATEWAY_PASSWORD`, `SMS_GATEWAY_SENDER`, `SMS_GATEWAY_PEID` | optional | Admin notifications / SMS campaigns |

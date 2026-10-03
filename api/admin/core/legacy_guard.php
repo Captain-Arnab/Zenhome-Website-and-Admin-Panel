@@ -43,7 +43,7 @@ require_once __DIR__ . '/bootstrap.php';
             session_write_close();
         }
     } catch (Throwable $e) {
-        error_log('[ZenCare legacy admin guard] ' . $e->getMessage());
+        error_log('[ZenHomeExperts legacy admin guard] ' . $e->getMessage());
         $deny(500, 'Server error. Please try again.');
     }
 })();

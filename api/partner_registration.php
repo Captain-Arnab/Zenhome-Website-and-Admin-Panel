@@ -1,6 +1,6 @@
 <?php
 /**
- * ZEN CARE – Service Partner Registration API
+ * ZEN HOME EXPERTS – Service Partner Registration API
  * POST: Submit full partner form (from Flutter Web / Android).
  * Data is stored in `service_partners` table.
  */

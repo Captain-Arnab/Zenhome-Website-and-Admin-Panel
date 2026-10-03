@@ -1,6 +1,6 @@
 <?php
 /**
- * ZEN CARE – Send OTP via Bulk SMS Hyderabad gateway.
+ * ZEN HOME EXPERTS – Send OTP via Bulk SMS Hyderabad gateway.
  * Include this file and call sendOtpSms($phone, $otp) from login.php and register.php.
  *
  * Credentials:
@@ -26,7 +26,7 @@ function sendOtpSms($mobile, $otp, $purpose = 'login') {
     $peid     = '1701177140036334378';
     $tpid     = '1707177191868029146';
 
-    $message = "Your OTP is $otp for $purpose.\nPlease do not share this code with anyone.\n- ZEN CARE\nzencareservice.com";
+    $message = "Your OTP is $otp for $purpose.\nPlease do not share this code with anyone.\n- ZEN HOME EXPERTS\nzenhomeexperts.com";
 
     // Build URL exactly as per the API format provided
     $url = "http://tra.bulksmshyderabad.co.in/websms/sendsms.aspx"

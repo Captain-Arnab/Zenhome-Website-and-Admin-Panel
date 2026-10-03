@@ -16,7 +16,7 @@ include 'header.php';
         <div class="zcs-ac-banner-content">
 
             <span class="zcs-ac-banner-label">
-                ZEN CARE HOME SERVICES
+                ZEN HOME EXPERTS HOME SERVICES
             </span>
 
             <h1>
@@ -25,7 +25,7 @@ include 'header.php';
 
             <p>
                 Complete your details, choose your preferred service
-                schedule and confirm your Zen Care booking.
+                schedule and confirm your Zen Home Experts booking.
             </p>
 
 

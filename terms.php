@@ -2,7 +2,7 @@
 // Published text from Admin > CMS Pages replaces the built-in text below.
 require_once __DIR__ . '/api/site_content.php';
 $cms = site_page_content('terms');
-$siteMeta = $cms ? ['title' => $cms['meta_title'] ?: $cms['title'] . ' | Zen Care Services', 'description' => $cms['meta_description']] : [];
+$siteMeta = $cms ? ['title' => $cms['meta_title'] ?: $cms['title'] . ' | Zen Home Experts', 'description' => $cms['meta_description']] : [];
 include('header.php');
 ?>
 
@@ -20,7 +20,7 @@ include('header.php');
         <div class="zcs-ac-banner-content">
 
             <span class="zcs-ac-banner-label">
-                ZEN CARE SERVICES
+                ZEN HOME EXPERTS
             </span>
 
             <h1>
@@ -29,7 +29,7 @@ include('header.php');
 
             <p>
                 Please read these Terms and Conditions carefully before
-                accessing, booking or using Zen Care Services.
+                accessing, booking or using Zen Home Experts.
             </p>
 
             <div class="zcs-ac-breadcrumb">
@@ -96,16 +96,16 @@ include('header.php');
             </h2>
 
             <p>
-                Welcome to Zen Care! These Terms and Conditions (“Terms”)
-                govern the access, use, and services offered by Zen Care
+                Welcome to Zen Home Experts! These Terms and Conditions (“Terms”)
+                govern the access, use, and services offered by Zen Home Experts
                 through its website, mobile application, and offline operations.
             </p>
 
             <p>
-                By accessing, browsing, or using Zen Care’s services,
+                By accessing, browsing, or using Zen Home Experts’s services,
                 you (“User” or “Customer”) agree to comply with these Terms.
                 If you do not agree to these Terms, you must discontinue
-                the use of Zen Care’s services immediately.
+                the use of Zen Home Experts’s services immediately.
             </p>
 
         </div>
@@ -130,22 +130,22 @@ include('header.php');
 
                 <ol>
                     <li>
-                        “Zen Care” refers to the brand and its parent company,
+                        “Zen Home Experts” refers to the brand and its parent company,
                         affiliates, and subsidiaries.
                     </li>
 
                     <li>
                         “User” or “Customer” refers to any individual or entity
-                        accessing or availing services through Zen Care.
+                        accessing or availing services through Zen Home Experts.
                     </li>
 
                     <li>
                         “Service Provider” refers to third-party professionals
-                        or businesses offering services through Zen Care.
+                        or businesses offering services through Zen Home Experts.
                     </li>
 
                     <li>
-                        “Platform” refers to the Zen Care website, mobile
+                        “Platform” refers to the Zen Home Experts website, mobile
                         application, and other digital mediums facilitating
                         service bookings.
                     </li>
@@ -159,7 +159,7 @@ include('header.php');
 
                     <li>
                         “Agreement” refers to these Terms and Conditions and
-                        any additional policies published by Zen Care.
+                        any additional policies published by Zen Home Experts.
                     </li>
                 </ol>
 
@@ -180,7 +180,7 @@ include('header.php');
                 <ol>
                     <li>
                         Users must be at least 18 years of age to access
-                        and avail of Zen Care’s services.
+                        and avail of Zen Home Experts’s services.
                     </li>
 
                     <li>
@@ -189,7 +189,7 @@ include('header.php');
                     </li>
 
                     <li>
-                        Zen Care reserves the right to refuse service to any
+                        Zen Home Experts reserves the right to refuse service to any
                         individual or entity at its discretion.
                     </li>
                 </ol>
@@ -224,7 +224,7 @@ include('header.php');
                     </li>
 
                     <li>
-                        Zen Care reserves the right to suspend or terminate
+                        Zen Home Experts reserves the right to suspend or terminate
                         accounts with incorrect or fraudulent information.
                     </li>
                 </ol>
@@ -246,7 +246,7 @@ include('header.php');
                     </li>
 
                     <li>
-                        Users must immediately notify Zen Care in case of
+                        Users must immediately notify Zen Home Experts in case of
                         unauthorized access or security breaches.
                     </li>
                 </ol>
@@ -272,7 +272,7 @@ include('header.php');
 
                 <ol>
                     <li>
-                        Services must be booked through the Zen Care
+                        Services must be booked through the Zen Home Experts
                         platform (website/app).
                     </li>
 
@@ -312,7 +312,7 @@ include('header.php');
                     </li>
 
                     <li>
-                        Zen Care reserves the right to modify pricing at
+                        Zen Home Experts reserves the right to modify pricing at
                         any time without prior notice.
                     </li>
                 </ol>
@@ -457,7 +457,7 @@ include('header.php');
                 <ol>
                     <li>
                         Service providers operate as independent contractors
-                        and are not employees of Zen Care.
+                        and are not employees of Zen Home Experts.
                     </li>
 
                     <li>
@@ -500,13 +500,13 @@ include('header.php');
 
                 <ol>
                     <li>
-                        Zen Care acts as a facilitator and does not assume
+                        Zen Home Experts acts as a facilitator and does not assume
                         direct responsibility for the quality of services
                         rendered by third-party service providers.
                     </li>
 
                     <li>
-                        Zen Care shall not be held liable for:
+                        Zen Home Experts shall not be held liable for:
 
                         <ul>
                             <li>
@@ -543,7 +543,7 @@ include('header.php');
 
                 <ol>
                     <li>
-                        Zen Care complies with the Information Technology
+                        Zen Home Experts complies with the Information Technology
                         (Reasonable Security Practices and Procedures and
                         Sensitive Personal Data or Information) Rules, 2011.
                     </li>
@@ -576,7 +576,7 @@ include('header.php');
                 <ol>
                     <li>
                         All content, including trademarks, logos, text, and
-                        images, is owned by Zen Care and protected under:
+                        images, is owned by Zen Home Experts and protected under:
 
                         <ul>
                             <li>
@@ -592,7 +592,7 @@ include('header.php');
 
                     <li>
                         Users shall not copy, modify, or redistribute
-                        Zen Care’s intellectual property without prior
+                        Zen Home Experts’s intellectual property without prior
                         written consent.
                     </li>
                 </ol>
@@ -645,7 +645,7 @@ include('header.php');
 
                 <ol>
                     <li>
-                        Zen Care reserves the right to terminate or suspend
+                        Zen Home Experts reserves the right to terminate or suspend
                         user accounts for:
 
                         <ul>
@@ -688,7 +688,7 @@ include('header.php');
 
                 <ol>
                     <li>
-                        Zen Care may revise these Terms at any time
+                        Zen Home Experts may revise these Terms at any time
                         without prior notice.
                     </li>
 
@@ -713,7 +713,7 @@ include('header.php');
                 </h2>
 
                 <p>
-                    Zen Care shall not be liable for service delays or
+                    Zen Home Experts shall not be liable for service delays or
                     failures due to unforeseen events including, but not
                     limited to, natural disasters, strikes, or government
                     restrictions.
@@ -756,7 +756,7 @@ include('header.php');
                 </div>
 
                 <p>
-                    By using Zen Care’s services, you acknowledge and
+                    By using Zen Home Experts’s services, you acknowledge and
                     agree to these Terms and Conditions.
                 </p>
 
@@ -793,7 +793,7 @@ include('header.php');
                 </h2>
 
                 <p>
-                    Contact Zen Care Services for assistance regarding
+                    Contact Zen Home Experts for assistance regarding
                     bookings, payments, refunds, service policies or
                     account-related queries.
                 </p>

@@ -319,7 +319,7 @@ function site_home_packages(int $limit = 8): array
         $pdo = site_content_db();
         return $pdo ? catalog_home_packages($pdo, $limit)[0] : [];
     } catch (Throwable $e) {
-        error_log('[ZenCare catalog] home packages: ' . $e->getMessage());
+        error_log('[ZenHomeExperts catalog] home packages: ' . $e->getMessage());
         return [];
     }
 }
@@ -334,7 +334,7 @@ function site_catalog_categories(): array
         $pdo = site_content_db();
         return $cache = $pdo ? catalog_categories($pdo)[0] : [];
     } catch (Throwable $e) {
-        error_log('[ZenCare catalog] categories: ' . $e->getMessage());
+        error_log('[ZenHomeExperts catalog] categories: ' . $e->getMessage());
         return $cache = [];
     }
 }
@@ -346,7 +346,7 @@ function site_catalog_category($key): ?array
         $pdo = site_content_db();
         return $pdo ? catalog_category($pdo, $key) : null;
     } catch (Throwable $e) {
-        error_log('[ZenCare catalog] category: ' . $e->getMessage());
+        error_log('[ZenHomeExperts catalog] category: ' . $e->getMessage());
         return null;
     }
 }
@@ -357,7 +357,7 @@ function site_catalog_services(array $filters, int $limit = 100): array
         $pdo = site_content_db();
         return $pdo ? catalog_services($pdo, $filters, $limit)[0] : [];
     } catch (Throwable $e) {
-        error_log('[ZenCare catalog] services: ' . $e->getMessage());
+        error_log('[ZenHomeExperts catalog] services: ' . $e->getMessage());
         return [];
     }
 }
@@ -368,7 +368,7 @@ function site_catalog_subcategories(int $categoryId): array
         $pdo = site_content_db();
         return $pdo ? catalog_subcategories($pdo, $categoryId) : [];
     } catch (Throwable $e) {
-        error_log('[ZenCare catalog] subcategories: ' . $e->getMessage());
+        error_log('[ZenHomeExperts catalog] subcategories: ' . $e->getMessage());
         return [];
     }
 }

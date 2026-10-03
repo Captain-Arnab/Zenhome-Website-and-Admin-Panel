@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Zen Care admin - API client (all browser -> backend calls go through here)
+   Zen Home Experts admin - API client (all browser -> backend calls go through here)
    AdminApi.post('customers.set_status', { id: 5, status: 0 })
    AdminApi.get('bookings.list', { status: 'New' })
    - Calls ../api/admin/<module>.php?action=<action>

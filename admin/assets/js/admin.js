@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Zen Care Services - Admin Panel UI scripts (vanilla JS)
+   Zen Home Experts - Admin Panel UI scripts (vanilla JS)
    Backend calls go through AdminApi (assets/js/api.js). Markup hooks:
      data-api="module.action"        on forms, delete/confirm buttons, toggles
      data-api-click="module.action"  plain action buttons/links

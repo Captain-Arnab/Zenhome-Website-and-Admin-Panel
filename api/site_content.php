@@ -30,7 +30,7 @@ function site_content_db(): ?PDO
             return $pdo = $conn;
         }
     } catch (Throwable $e) {
-        error_log('[ZenCare site content] ' . $e->getMessage());
+        error_log('[ZenHomeExperts site content] ' . $e->getMessage());
     }
     return $pdo = null;
 }
@@ -163,7 +163,7 @@ function site_page_content(string $slug): ?array
         $pdo = site_content_db();
         return $pdo ? site_cms_page($pdo, $slug) : null;
     } catch (Throwable $e) {
-        error_log('[ZenCare site content] cms ' . $slug . ': ' . $e->getMessage());
+        error_log('[ZenHomeExperts site content] cms ' . $slug . ': ' . $e->getMessage());
         return null;
     }
 }
@@ -175,7 +175,7 @@ function site_live_banners(string $placement, int $limit = 6): array
         $pdo = site_content_db();
         return $pdo ? site_banners($pdo, $placement, $limit)[0] : [];
     } catch (Throwable $e) {
-        error_log('[ZenCare site content] banners: ' . $e->getMessage());
+        error_log('[ZenHomeExperts site content] banners: ' . $e->getMessage());
         return [];
     }
 }
@@ -200,7 +200,7 @@ function site_serviceable_areas(int $limit = 12): array
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     } catch (Throwable $e) {
-        error_log('[ZenCare site content] serviceable areas: ' . $e->getMessage());
+        error_log('[ZenHomeExperts site content] serviceable areas: ' . $e->getMessage());
         return [];
     }
 }
@@ -235,12 +235,12 @@ function site_testimonials(int $min = 3, int $limit = 6): array
             return [
                 'rating'  => (float) $r['rating'],
                 'text'    => (string) $r['feedback'],
-                'name'    => $name !== '' ? $name : 'Zen Care Customer',
+                'name'    => $name !== '' ? $name : 'Zen Home Experts Customer',
                 'service' => (string) ($r['category'] ?? ''),
             ];
         }, $rows);
     } catch (Throwable $e) {
-        error_log('[ZenCare site content] testimonials: ' . $e->getMessage());
+        error_log('[ZenHomeExperts site content] testimonials: ' . $e->getMessage());
         return [];
     }
 }

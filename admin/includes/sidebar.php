@@ -45,11 +45,11 @@ $menu = [
 ?>
 <aside class="sidebar" id="sidebar" aria-label="Admin navigation">
     <div class="sidebar-brand">
-        <a href="index.php" class="brand-logo" title="Zen Care Services">
-            <img src="assets/img/logo.png" alt="Zen Care Services">
+        <a href="index.php" class="brand-logo" title="Zen Home Experts">
+            <img src="assets/img/logo.png" alt="Zen Home Experts">
         </a>
         <div class="brand-text">
-            <strong>Zen Care</strong>
+            <strong>Zen Home Experts</strong>
             <small>Admin Panel</small>
         </div>
         <button type="button" class="btn btn-sm text-white ms-auto d-lg-none" data-sidebar-close aria-label="Close menu">

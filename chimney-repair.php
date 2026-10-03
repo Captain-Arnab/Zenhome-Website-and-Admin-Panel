@@ -80,7 +80,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
 
 
                 <p>
-                    Zen Care Services provides professional chimney
+                    Zen Home Experts provides professional chimney
                     inspection, repair, cleaning and maintenance services
                     for modern kitchens. Our technicians help identify
                     suction, motor, fan and control panel problems.
@@ -218,7 +218,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
 
 
 <!-- ======================================================
-     WHY CHOOSE ZEN CARE
+     WHY CHOOSE ZEN HOME EXPERTS
 ====================================================== -->
 
 <section class="zcs-ac-why">
@@ -229,7 +229,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
         <div class="zcs-ac-heading">
 
             <span>
-                WHY CHOOSE ZEN CARE
+                WHY CHOOSE ZEN HOME EXPERTS
             </span>
 
             <h2>
@@ -346,7 +346,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
             <div class="zcs-ac-process-heading">
 
                 <span class="zcs-ac-section-label">
-                    HOW ZEN CARE WORKS
+                    HOW ZEN HOME EXPERTS WORKS
                 </span>
 
                 <h2>
@@ -359,7 +359,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
                 <p>
                     Select your required chimney service,
                     choose a convenient slot and let
-                    Zen Care handle the rest.
+                    Zen Home Experts handle the rest.
                 </p>
 
                 <?php endif; ?>
@@ -493,7 +493,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
                 <?php if (!catalog_render_section($catalogCategory, 'cta_html')): ?>
 
                 <p>
-                    Schedule your Zen Care chimney service today
+                    Schedule your Zen Home Experts chimney service today
                     for cleaning, inspection, repair or installation.
                 </p>
 

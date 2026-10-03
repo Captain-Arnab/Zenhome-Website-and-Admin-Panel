@@ -2,7 +2,7 @@
 // Published text from Admin > CMS Pages replaces the built-in intro text below.
 require_once __DIR__ . '/api/catalog_helper.php';
 $cms = site_page_content('about-us');
-$siteMeta = $cms ? ['title' => $cms['meta_title'] ?: $cms['title'] . ' | Zen Care Services', 'description' => $cms['meta_description']] : [];
+$siteMeta = $cms ? ['title' => $cms['meta_title'] ?: $cms['title'] . ' | Zen Home Experts', 'description' => $cms['meta_description']] : [];
 include('header.php');
 ?>
 
@@ -20,11 +20,11 @@ include('header.php');
         <div class="zcs-ac-banner-content">
 
             <span class="zcs-ac-banner-label">
-                ZEN CARE HOME SERVICES
+                ZEN HOME EXPERTS HOME SERVICES
             </span>
 
             <h1>
-                About Zen Care
+                About Zen Home Experts
             </h1>
 
             <p>
@@ -77,7 +77,7 @@ include('header.php');
 
                 <img
                     src="<?= site_e(site_setting('about_image_1')) ?>"
-                    alt="About Zen Care Home Services"
+                    alt="About Zen Home Experts Home Services"
                 >
 
                 <div class="zcs-ac-image-badge">
@@ -109,7 +109,7 @@ include('header.php');
             <div class="zcs-ac-intro-content">
 
                 <span class="zcs-ac-section-label">
-                    ABOUT ZEN CARE
+                    ABOUT ZEN HOME EXPERTS
                 </span>
 
                 <?php if ($cms): ?>
@@ -129,7 +129,7 @@ include('header.php');
 
 
                 <p>
-                    Welcome to Zen Care, your one-stop solution for all home
+                    Welcome to Zen Home Experts, your one-stop solution for all home
                     and lifestyle services. We are dedicated to making your life
                     easier with our professional and reliable services.
                 </p>
@@ -263,7 +263,7 @@ include('header.php');
             </h2>
 
             <p>
-                Zen Care is built around convenience, quality
+                Zen Home Experts is built around convenience, quality
                 and a customer-first service experience.
             </p>
 
@@ -379,7 +379,7 @@ include('header.php');
 
             <p>
                 From appliance repair to home cleaning and
-                everyday maintenance, Zen Care brings multiple
+                everyday maintenance, Zen Home Experts brings multiple
                 services together in one convenient place.
             </p>
 
@@ -462,7 +462,7 @@ include('header.php');
             <div class="zcs-ac-process-heading">
 
                 <span class="zcs-ac-section-label">
-                    WHY ZEN CARE
+                    WHY ZEN HOME EXPERTS
                 </span>
 
                 <h2>
@@ -471,7 +471,7 @@ include('header.php');
                 </h2>
 
                 <p>
-                    At Zen Care, we believe in quality,
+                    At Zen Home Experts, we believe in quality,
                     convenience and customer satisfaction.
                     Your comfort is our priority.
                 </p>
@@ -581,7 +581,7 @@ include('header.php');
 
 
 <!-- ======================================================
-     HOW ZEN CARE WORKS
+     HOW ZEN HOME EXPERTS WORKS
 ====================================================== -->
 
 <section class="zcs-ac-why">
@@ -715,7 +715,7 @@ include('header.php');
 
                 <p>
                     Home maintenance and lifestyle needs are part of
-                    everyday life. Zen Care aims to make accessing
+                    everyday life. Zen Home Experts aims to make accessing
                     professional service simpler and more convenient.
                 </p>
 
@@ -772,7 +772,7 @@ include('header.php');
                 <img
                     src="<?= site_e(site_setting('about_image_2')) ?>"
                     loading="lazy"
-                    alt="Zen Care Professional Home Services"
+                    alt="Zen Home Experts Professional Home Services"
                 >
 
                 <div class="zcs-ac-image-badge">
@@ -825,7 +825,7 @@ include('header.php');
 
                 <h2>
                     Find the Right Service
-                    with Zen Care.
+                    with Zen Home Experts.
                 </h2>
 
                 <p>

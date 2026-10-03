@@ -75,7 +75,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
                 <?php if (!catalog_render_long_description($catalogCategory)): ?>
 
                 <p>
-                    Zen Care Services provides professional pest control
+                    Zen Home Experts provides professional pest control
                     solutions for homes, apartments and commercial spaces.
                 </p>
 
@@ -197,7 +197,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
 
 
 <!-- ======================================================
-     WHY CHOOSE ZEN CARE
+     WHY CHOOSE ZEN HOME EXPERTS
 ====================================================== -->
 
 <section class="zcs-ac-why">
@@ -208,7 +208,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
         <div class="zcs-ac-heading">
 
             <span>
-                WHY CHOOSE ZEN CARE
+                WHY CHOOSE ZEN HOME EXPERTS
             </span>
 
             <h2>
@@ -325,7 +325,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
             <div class="zcs-ac-process-heading">
 
                 <span class="zcs-ac-section-label">
-                    HOW ZEN CARE WORKS
+                    HOW ZEN HOME EXPERTS WORKS
                 </span>
 
                 <h2>
@@ -472,7 +472,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
                 <?php if (!catalog_render_section($catalogCategory, 'cta_html')): ?>
 
                 <p>
-                    Schedule your Zen Care pest control service today
+                    Schedule your Zen Home Experts pest control service today
                     for professional treatment of your home, apartment,
                     office or commercial space.
                 </p>

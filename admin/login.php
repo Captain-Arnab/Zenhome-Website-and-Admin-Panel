@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (ApiException $e) {
             $error = $e->getMessage();
         } catch (Throwable $e) {
-            error_log('[ZenCare admin login] ' . $e->getMessage());
+            error_log('[ZenHomeExperts admin login] ' . $e->getMessage());
             $error = 'Could not sign in right now. Please try again.';
         }
     }
@@ -45,7 +45,7 @@ $h = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Admin Login | Zen Care Services</title>
+    <title>Admin Login | Zen Home Experts</title>
     <link rel="icon" type="image/png" href="assets/img/logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -60,7 +60,7 @@ $h = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
     <!-- Brand panel (hidden on mobile) -->
     <section class="login-brand">
         <div>
-            <span class="brand-logo"><img src="assets/img/logo.png" alt="Zen Care Services"></span>
+            <span class="brand-logo"><img src="assets/img/logo.png" alt="Zen Home Experts"></span>
         </div>
         <div>
             <h2>Manage every home service booking from one place.</h2>
@@ -69,16 +69,16 @@ $h = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
             <div class="feature"><i class="bi bi-person-check"></i> Manual professional assignment</div>
             <div class="feature"><i class="bi bi-graph-up-arrow"></i> Payments, reports &amp; customer insights</div>
         </div>
-        <small class="text-white-50">&copy; <?= date('Y') ?> Zen Care Services</small>
+        <small class="text-white-50">&copy; <?= date('Y') ?> Zen Home Experts</small>
     </section>
 
     <!-- Form -->
     <section class="login-form-wrap">
         <div class="login-card">
             <div class="text-center mb-4">
-                <span class="login-mobile-logo mb-3"><img src="assets/img/logo.png" alt="Zen Care Services" height="60"></span>
+                <span class="login-mobile-logo mb-3"><img src="assets/img/logo.png" alt="Zen Home Experts" height="60"></span>
                 <h1 class="mb-1">Welcome back</h1>
-                <p class="text-muted mb-0">Sign in to the Zen Care admin panel</p>
+                <p class="text-muted mb-0">Sign in to the Zen Home Experts admin panel</p>
             </div>
 
             <?php if ($error !== ''): ?>
@@ -100,7 +100,7 @@ $h = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
                             <label class="form-label" for="loginUser">Email</label>
                             <div class="input-group has-validation">
                                 <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                <input type="email" class="form-control" id="loginUser" name="username" value="<?= $h($email) ?>" placeholder="admin@zencareservices.in" required autofocus>
+                                <input type="email" class="form-control" id="loginUser" name="username" value="<?= $h($email) ?>" placeholder="admin@zenhomeexperts.com" required autofocus>
                                 <div class="invalid-feedback">Please enter your email address.</div>
                             </div>
                         </div>

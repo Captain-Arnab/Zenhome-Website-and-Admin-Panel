@@ -20,16 +20,16 @@ include 'header.php';
             <div class="zcs-signup-info">
 
                 <span class="zcs-signup-label">
-                    ZEN CARE SERVICES
+                    ZEN HOME EXPERTS
                 </span>
 
                 <h1>
                     Create Your
-                    <strong>Zen Care Account.</strong>
+                    <strong>Zen Home Experts Account.</strong>
                 </h1>
 
                 <p>
-                    Register with Zen Care Services to book trusted home
+                    Register with Zen Home Experts to book trusted home
                     services, manage your appointments and keep track
                     of your service history from one convenient account.
                 </p>
@@ -151,7 +151,7 @@ include 'header.php';
 
                     <p>
                         Enter your details below to register
-                        with Zen Care Services.
+                        with Zen Home Experts.
                     </p>
 
                 </div>
@@ -476,7 +476,7 @@ include 'header.php';
                 <div class="zcs-signup-login">
 
                     <p>
-                        Already have a Zen Care account?
+                        Already have a Zen Home Experts account?
 
                         <a href="login.php">
                             Sign In
@@ -533,7 +533,7 @@ include 'header.php';
                 </h2>
 
                 <p>
-                    Contact the Zen Care support team for assistance
+                    Contact the Zen Home Experts support team for assistance
                     with registration, bookings or services.
                 </p>
 

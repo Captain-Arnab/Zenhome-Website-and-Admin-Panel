@@ -100,7 +100,7 @@ include __DIR__ . '/includes/topbar.php';
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label" for="cmsMetaTitle">Meta title</label>
-                            <input type="text" class="form-control" id="cmsMetaTitle" name="meta_title" maxlength="70" value="<?= e($current['meta_title']) ?>" placeholder="<?= e($current['title']) ?> | Zen Care Services" data-char-count="#metaTitleCount">
+                            <input type="text" class="form-control" id="cmsMetaTitle" name="meta_title" maxlength="70" value="<?= e($current['meta_title']) ?>" placeholder="<?= e($current['title']) ?> | Zen Home Experts" data-char-count="#metaTitleCount">
                             <small class="form-text" id="metaTitleCount"></small>
                         </div>
                         <div class="col-md-6">

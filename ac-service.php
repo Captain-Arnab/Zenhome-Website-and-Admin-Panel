@@ -79,7 +79,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
 
 
                 <p>
-                    Zen Care Services provides professional air conditioner
+                    Zen Home Experts provides professional air conditioner
                     servicing, repair and maintenance for homes and businesses.
                     Our technicians help keep your AC working efficiently,
                     cooling properly and running smoothly.
@@ -215,7 +215,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
 
 
 <!-- ======================================================
-     WHY CHOOSE ZEN CARE
+     WHY CHOOSE ZEN HOME EXPERTS
 ====================================================== -->
 
 <section class="zcs-ac-why">
@@ -226,7 +226,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
         <div class="zcs-ac-heading">
 
             <span>
-                WHY CHOOSE ZEN CARE
+                WHY CHOOSE ZEN HOME EXPERTS
             </span>
 
             <h2>
@@ -350,7 +350,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
             <div class="zcs-ac-process-heading">
 
                 <span class="zcs-ac-section-label">
-                    HOW ZEN CARE WORKS
+                    HOW ZEN HOME EXPERTS WORKS
                 </span>
 
                 <h2>
@@ -361,7 +361,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
                 <?php if (!catalog_render_section($catalogCategory, 'process_html')): ?>
                 <p>
                     Book your AC service without complicated steps.
-                    Select the service you need and let Zen Care
+                    Select the service you need and let Zen Home Experts
                     handle the rest.
                 </p>
                 <?php endif; ?>
@@ -495,7 +495,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
 
                 <?php if (!catalog_render_section($catalogCategory, 'cta_html')): ?>
                 <p>
-                    Schedule your Zen Care AC service today
+                    Schedule your Zen Home Experts AC service today
                     and keep your home cool and comfortable.
                 </p>
                 <?php endif; ?>

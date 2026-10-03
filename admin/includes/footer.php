@@ -10,7 +10,7 @@ $plugins = $plugins ?? [];
 </main>
 
 <footer class="page-footer d-flex flex-wrap justify-content-between gap-2">
-    <span>&copy; <?= date('Y') ?> Zen Care Services. All rights reserved.</span>
+    <span>&copy; <?= date('Y') ?> Zen Home Experts. All rights reserved.</span>
     <span>Admin Panel v1.0</span>
 </footer>
 </div><!-- /.main-wrapper -->

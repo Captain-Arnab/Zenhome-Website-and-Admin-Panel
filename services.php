@@ -1,13 +1,13 @@
 <?php
 require_once __DIR__ . '/api/catalog_helper.php';
-$siteMeta = ['title' => 'Our Services | Zen Care Services'];
+$siteMeta = ['title' => 'Our Services | Zen Home Experts'];
 include 'header.php';
 $serviceCategories = site_catalog_categories();
 ?>
 
 
 <!-- =========================================================
-     ZEN CARE SERVICES - OUR SERVICES PAGE
+     ZEN HOME EXPERTS - OUR SERVICES PAGE
 ========================================================= -->
 
 
@@ -24,7 +24,7 @@ $serviceCategories = site_catalog_categories();
         <div class="zcs-ac-banner-content">
 
             <span class="zcs-ac-banner-label">
-                ZEN CARE HOME SERVICES
+                ZEN HOME EXPERTS HOME SERVICES
             </span>
 
             <h1>Our Services</h1>
@@ -80,7 +80,7 @@ $serviceCategories = site_catalog_categories();
 
                 <p>
                     From appliance repairs and installations to cleaning,
-                    beauty and pest control, Zen Care Services makes
+                    beauty and pest control, Zen Home Experts makes
                     maintaining your home simple and convenient.
                 </p>
 
@@ -229,7 +229,7 @@ $serviceCategories = site_catalog_categories();
 
 
 <!-- =========================================================
-     WHY BOOK WITH ZEN CARE
+     WHY BOOK WITH ZEN HOME EXPERTS
 ========================================================= -->
 
 <section class="zcs-services-why">
@@ -238,7 +238,7 @@ $serviceCategories = site_catalog_categories();
 
         <div class="zcs-services-why-head">
 
-            <span>WHY ZEN CARE?</span>
+            <span>WHY ZEN HOME EXPERTS?</span>
 
             <h2>
                 Home Services Made

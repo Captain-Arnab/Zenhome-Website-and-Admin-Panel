@@ -21,7 +21,7 @@ $csrfToken  = csrf_token();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <meta name="csrf-token" content="<?= e($csrfToken) ?>">
-    <title><?= e($pageTitle) ?> | Zen Care Admin</title>
+    <title><?= e($pageTitle) ?> | Zen Home Experts Admin</title>
     <link rel="icon" type="image/png" href="assets/img/logo.png">
 
     <!-- Same font as the public website -->

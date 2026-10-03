@@ -2,7 +2,7 @@
 // Published text from Admin > CMS Pages replaces the built-in text below.
 require_once __DIR__ . '/api/site_content.php';
 $cms = site_page_content('refund-policy');
-$siteMeta = $cms ? ['title' => $cms['meta_title'] ?: $cms['title'] . ' | Zen Care Services', 'description' => $cms['meta_description']] : [];
+$siteMeta = $cms ? ['title' => $cms['meta_title'] ?: $cms['title'] . ' | Zen Home Experts', 'description' => $cms['meta_description']] : [];
 include('header.php');
 ?>
 
@@ -20,7 +20,7 @@ include('header.php');
         <div class="zcs-ac-banner-content">
 
             <span class="zcs-ac-banner-label">
-                ZEN CARE SERVICES
+                ZEN HOME EXPERTS
             </span>
 
             <h1>
@@ -29,7 +29,7 @@ include('header.php');
 
             <p>
                 Clear and transparent information about service cancellations,
-                refunds and rescheduling with Zen Care Services.
+                refunds and rescheduling with Zen Home Experts.
             </p>
 
             <div class="zcs-ac-breadcrumb">
@@ -99,14 +99,14 @@ include('header.php');
             </h2>
 
             <p>
-                Zen Care ("Company", "we", "us", or "our") strives to provide
+                Zen Home Experts ("Company", "we", "us", or "our") strives to provide
                 high-quality services to our customers. This Cancellation and
                 Refund Policy outlines the terms governing service cancellations,
                 refunds, and rescheduling.
             </p>
 
             <p>
-                By booking a service with Zen Care, you agree to the terms
+                By booking a service with Zen Home Experts, you agree to the terms
                 set forth in this policy.
             </p>
 
@@ -135,7 +135,7 @@ include('header.php');
 
                     <li>
                         Customers may cancel their service booking through
-                        the Zen Care website, mobile app, or by contacting
+                        the Zen Home Experts website, mobile app, or by contacting
                         customer support.
                     </li>
 
@@ -160,13 +160,13 @@ include('header.php');
 
 
                 <h3>
-                    1.2 Cancellation by Zen Care
+                    1.2 Cancellation by Zen Home Experts
                 </h3>
 
                 <ol>
 
                     <li>
-                        Zen Care reserves the right to cancel bookings due to:
+                        Zen Home Experts reserves the right to cancel bookings due to:
 
                         <ul>
 
@@ -220,7 +220,7 @@ include('header.php');
                 <ol>
 
                     <li>
-                        Service was canceled by Zen Care due to provider
+                        Service was canceled by Zen Home Experts due to provider
                         unavailability.
                     </li>
 
@@ -372,7 +372,7 @@ include('header.php');
 
 
                 <p>
-                    By booking a service with Zen Care, you acknowledge
+                    By booking a service with Zen Home Experts, you acknowledge
                     that you have read, understood, and agreed to this
                     Cancellation and Refund Policy.
                 </p>
@@ -412,7 +412,7 @@ include('header.php');
                 </h2>
 
                 <p>
-                    Contact the Zen Care support team for assistance
+                    Contact the Zen Home Experts support team for assistance
                     with your service booking, cancellation, refund,
                     or rescheduling request.
                 </p>

@@ -88,7 +88,7 @@ if ($action === 'request') {
     $sms = sendOtpSms($phone, $otp, 'password reset');
     if (empty($sms['success'])) {
         $conn->prepare('DELETE FROM password_resets WHERE user_id = ?')->execute([(int) $user['ID']]);
-        error_log('[ZenCare password reset] SMS failed: ' . ($sms['error'] ?? 'unknown'));
+        error_log('[ZenHomeExperts password reset] SMS failed: ' . ($sms['error'] ?? 'unknown'));
         public_json(502, 'We could not send the OTP right now. Please try again in a few minutes.');
     }
     public_json(200, $sentMessage, ['expires_in' => RESET_OTP_TTL]);

@@ -20,12 +20,12 @@ include 'header.php';
             <div class="zcs-login-info">
 
                 <span class="zcs-login-label">
-                    ZEN CARE SERVICES
+                    ZEN HOME EXPERTS
                 </span>
 
                 <h1>
                     Welcome Back to
-                    <strong>Zen Care.</strong>
+                    <strong>Zen Home Experts.</strong>
                 </h1>
 
                 <p>
@@ -52,7 +52,7 @@ include 'header.php';
 
                             <p>
                                 View your current and upcoming
-                                Zen Care service appointments.
+                                Zen Home Experts service appointments.
                             </p>
 
                         </div>
@@ -381,7 +381,7 @@ include 'header.php';
                 <div class="zcs-login-register">
 
                     <p>
-                        Don't have a Zen Care account?
+                        Don't have a Zen Home Experts account?
 
                         <a href="register.php">
                             Create Account
@@ -438,7 +438,7 @@ include 'header.php';
                 </h2>
 
                 <p>
-                    Our Zen Care support team can assist you
+                    Our Zen Home Experts support team can assist you
                     with account and booking-related enquiries.
                 </p>
 

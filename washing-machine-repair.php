@@ -80,7 +80,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
 
 
                 <p>
-                    Zen Care Services provides professional washing machine
+                    Zen Home Experts provides professional washing machine
                     inspection, repair, installation and maintenance services
                     for homes. Our experienced technicians diagnose common
                     washing machine problems and provide reliable service.
@@ -219,7 +219,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
 
 
 <!-- ======================================================
-     WHY CHOOSE ZEN CARE
+     WHY CHOOSE ZEN HOME EXPERTS
 ====================================================== -->
 
 <section class="zcs-ac-why">
@@ -230,7 +230,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
         <div class="zcs-ac-heading">
 
             <span>
-                WHY CHOOSE ZEN CARE
+                WHY CHOOSE ZEN HOME EXPERTS
             </span>
 
             <h2>
@@ -358,7 +358,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
             <div class="zcs-ac-process-heading">
 
                 <span class="zcs-ac-section-label">
-                    HOW ZEN CARE WORKS
+                    HOW ZEN HOME EXPERTS WORKS
                 </span>
 
                 <h2>
@@ -370,7 +370,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
 
                 <p>
                     Book your washing machine service without complicated
-                    steps. Select the service you need and let Zen Care
+                    steps. Select the service you need and let Zen Home Experts
                     handle the rest.
                 </p>
 
@@ -507,7 +507,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
                 <?php if (!catalog_render_section($catalogCategory, 'cta_html')): ?>
 
                 <p>
-                    Schedule your Zen Care washing machine service
+                    Schedule your Zen Home Experts washing machine service
                     today for professional inspection, repair,
                     installation or uninstallation.
                 </p>

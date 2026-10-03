@@ -202,7 +202,7 @@ include('header.php');
 
 
 <!-- =========================================================
-     HOW ZEN CARE WORKS
+     HOW ZEN HOME EXPERTS WORKS
 ========================================================= -->
 <section class="zcs-home-work-section">
 
@@ -211,7 +211,7 @@ include('header.php');
         <div class="zcs-home-section-head">
 
             <span class="zcs-home-section-tag">
-                HOW ZEN CARE WORKS
+                HOW ZEN HOME EXPERTS WORKS
             </span>
 
             <h2>
@@ -406,7 +406,7 @@ include('header.php');
 
 
 <!-- =========================================================
-     WHY CHOOSE ZEN CARE + COUNTERS
+     WHY CHOOSE ZEN HOME EXPERTS + COUNTERS
 ========================================================= -->
 <section class="zcs-home-why-section">
 
@@ -418,7 +418,7 @@ include('header.php');
             <div class="zcs-home-why-content">
 
                 <span class="zcs-home-section-tag">
-                    WHY CHOOSE ZEN CARE
+                    WHY CHOOSE ZEN HOME EXPERTS
                 </span>
 
                 <h2>
@@ -427,7 +427,7 @@ include('header.php');
                 </h2>
 
                 <p class="zcs-home-why-intro">
-                    Zen Care brings essential home services together in one
+                    Zen Home Experts brings essential home services together in one
                     convenient place, helping customers save time while
                     getting dependable professional support.
                 </p>
@@ -623,7 +623,7 @@ include('header.php');
                             <i class="fa-solid fa-location-dot"></i>
                         </span>
 
-                        <strong>Zen Care</strong>
+                        <strong>Zen Home Experts</strong>
 
                         <small>
                             Home Services Near You
@@ -666,7 +666,7 @@ include('header.php');
                 </h2>
 
                 <p>
-                    Zen Care provides convenient doorstep services across
+                    Zen Home Experts provides convenient doorstep services across
                     multiple locations. Choose your area and book the
                     service you need.
                 </p>
@@ -730,13 +730,13 @@ include('header.php');
 
                 <h2>
                     What Customers Say
-                    <strong>About Zen Care.</strong>
+                    <strong>About Zen Home Experts.</strong>
                 </h2>
             </div>
 
             <p>
                 Real service experiences from customers who choose
-                Zen Care for everyday home requirements.
+                Zen Home Experts for everyday home requirements.
             </p>
 
         </div>
@@ -766,7 +766,7 @@ include('header.php');
 
                     <div>
                         <strong><?= site_e($zcsT['name']) ?></strong>
-                        <small><?= site_e($zcsT['service'] ?: 'Zen Care Customer') ?></small>
+                        <small><?= site_e($zcsT['service'] ?: 'Zen Home Experts Customer') ?></small>
                     </div>
 
                 </div>
@@ -893,7 +893,7 @@ include('header.php');
             <div class="zcs-home-app-content">
 
                 <span class="zcs-home-app-tag">
-                    ZEN CARE ON YOUR PHONE
+                    ZEN HOME EXPERTS ON YOUR PHONE
                 </span>
 
                 <h2>
@@ -904,7 +904,7 @@ include('header.php');
                 <p>
                     Discover services, book professionals and manage
                     your home service requirements conveniently from
-                    the Zen Care mobile experience.
+                    the Zen Home Experts mobile experience.
                 </p>
 
 
@@ -941,7 +941,7 @@ include('header.php');
 
                         <img
                             src="<?= site_e(site_app_qr_src()) ?>"
-                            alt="Zen Care App QR Code"
+                            alt="Zen Home Experts App QR Code"
                         >
 
                     </div>
@@ -956,7 +956,7 @@ include('header.php');
 
                         <p>
                             Scan the QR code using your phone
-                            to explore Zen Care Services.
+                            to explore Zen Home Experts.
                         </p>
 
 
@@ -1016,7 +1016,7 @@ include('header.php');
 
                             <div>
                                 <small>WELCOME TO</small>
-                                <strong>ZEN CARE</strong>
+                                <strong>ZEN HOME EXPERTS</strong>
                             </div>
                         </div>
 

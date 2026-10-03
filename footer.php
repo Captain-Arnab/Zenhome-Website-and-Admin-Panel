@@ -1,6 +1,6 @@
 <?php require_once __DIR__ . '/api/site_settings_helper.php'; ?>
 <!-- =========================
-     ZEN CARE PREMIUM FOOTER
+     ZEN HOME EXPERTS PREMIUM FOOTER
 ========================= -->
 
 <footer class="zcs-footer">

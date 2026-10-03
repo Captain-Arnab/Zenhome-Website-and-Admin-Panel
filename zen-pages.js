@@ -1,5 +1,5 @@
 /* =========================================================
-   ZEN CARE - PAGE LOGIC
+   ZEN HOME EXPERTS - PAGE LOGIC
    Login, register, cart and checkout pages.
    Needs zen-api.js (window.ZenAPI) and common.js (window.ZenCart).
 ========================================================= */
@@ -453,7 +453,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                 "</button>" +
                             "</div>" +
                             '<p class="zcs-cart-item-description">' +
-                                "Professional " + API.escapeHtml(category.toLowerCase()) + " at your doorstep by experienced Zen Care technicians." +
+                                "Professional " + API.escapeHtml(category.toLowerCase()) + " at your doorstep by experienced Zen Home Experts technicians." +
                             "</p>" +
                             '<div class="zcs-cart-item-bottom">' +
                                 '<div class="zcs-cart-item-price">' +
@@ -850,7 +850,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         body: {
                             amount: payable,
                             order_id: "ZC-" + bookingId,
-                            message: "Zen Care booking " + bookingId
+                            message: "Zen Home Experts booking " + bookingId
                         }
                     }).then(function (pay) {
 

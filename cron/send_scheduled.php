@@ -126,7 +126,7 @@ try {
             } catch (ApiException $e) {
                 [$status, $detail, $count] = ['Not sent', $e->getMessage(), 0];
             } catch (Throwable $e) {
-                error_log("[ZenCare cron] $table #$id: " . $e->getMessage());
+                error_log("[ZenHomeExperts cron] $table #$id: " . $e->getMessage());
                 [$status, $detail, $count] = ['Failed', 'Error while sending: ' . $e->getMessage(), 0];
             }
             cron_finish($table, $id, $status, $detail);
@@ -136,7 +136,7 @@ try {
     }
 } catch (Throwable $e) {
     $summary['errors'][] = $e->getMessage();
-    error_log('[ZenCare cron] ' . $e->getMessage());
+    error_log('[ZenHomeExperts cron] ' . $e->getMessage());
     cron_log('ERROR: ' . $e->getMessage());
 }
 

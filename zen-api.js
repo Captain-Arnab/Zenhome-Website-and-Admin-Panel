@@ -1,5 +1,5 @@
 /* =========================================================
-   ZEN CARE - BACKEND CONNECTION
+   ZEN HOME EXPERTS - BACKEND CONNECTION
    Talks to the PHP API in /api: login session, header state,
    cart sync and PhonePe payment confirmation.
 ========================================================= */

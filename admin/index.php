@@ -38,7 +38,7 @@ include __DIR__ . '/includes/topbar.php';
 <div class="page-header">
     <div>
         <h2><?= greeting() ?>, <?= e(strtok($currentAdmin['name'], ' ')) ?></h2>
-        <p>Here is what is happening with Zen Care bookings today, <?= date('l, d M Y') ?>.</p>
+        <p>Here is what is happening with Zen Home Experts bookings today, <?= date('l, d M Y') ?>.</p>
     </div>
     <div class="actions">
         <a href="bookings.php?status=unassigned" class="btn btn-warning"><i class="bi bi-person-plus me-1"></i> Assign Pending (<?= $stats['unassigned'] ?>)</a>

@@ -117,7 +117,7 @@ include __DIR__ . '/includes/topbar.php';
                 <div class="bg-white rounded-4 shadow-sm p-3 w-100" style="max-width:360px">
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <img src="assets/img/logo.png" alt="" height="22">
-                        <small class="text-muted">Zen Care Services &middot; now</small>
+                        <small class="text-muted">Zen Home Experts &middot; now</small>
                     </div>
                     <strong class="d-block text-heading" id="pvTitle" data-empty="Notification title">Notification title</strong>
                     <p class="fs-13 mb-0 text-muted" id="pvBody" data-empty="Your message will appear here.">Your message will appear here.</p>

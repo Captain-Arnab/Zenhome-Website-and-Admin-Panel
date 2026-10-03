@@ -2,7 +2,7 @@
 // Published text from Admin > CMS Pages replaces the built-in intro text below.
 require_once __DIR__ . '/api/site_content.php';
 $cms = site_page_content('contact-us');
-$siteMeta = $cms ? ['title' => $cms['meta_title'] ?: $cms['title'] . ' | Zen Care Services', 'description' => $cms['meta_description']] : [];
+$siteMeta = $cms ? ['title' => $cms['meta_title'] ?: $cms['title'] . ' | Zen Home Experts', 'description' => $cms['meta_description']] : [];
 include('header.php');
 ?>
 
@@ -20,14 +20,14 @@ include('header.php');
         <div class="zcs-ac-banner-content">
 
             <span class="zcs-ac-banner-label">
-                ZEN CARE HOME SERVICES
+                ZEN HOME EXPERTS HOME SERVICES
             </span>
 
             <h1>Contact Us</h1>
 
             <p>
                 Have a question or need help choosing a service?
-                Get in touch with the Zen Care team.
+                Get in touch with the Zen Home Experts team.
             </p>
 
             <div class="zcs-ac-breadcrumb">
@@ -70,7 +70,7 @@ include('header.php');
 
                 <img
                     src="<?= site_e(site_setting('contact_image')) ?>"
-                    alt="Contact Zen Care Home Services"
+                    alt="Contact Zen Home Experts Home Services"
                 >
 
                 <div class="zcs-ac-image-badge">
@@ -117,13 +117,13 @@ include('header.php');
 
                 <h2>
                     Need Help?
-                    <strong>Talk to Zen Care.</strong>
+                    <strong>Talk to Zen Home Experts.</strong>
                 </h2>
 
                 <p>
                     Whether you need help selecting a service,
                     have a question about your booking or simply
-                    want to know more about Zen Care, our team
+                    want to know more about Zen Home Experts, our team
                     is ready to assist you.
                 </p>
 
@@ -224,7 +224,7 @@ include('header.php');
 
             <h2>
                 Connect With
-                <strong>Zen Care.</strong>
+                <strong>Zen Home Experts.</strong>
             </h2>
 
             <p>
@@ -607,7 +607,7 @@ include('header.php');
                 </h2>
 
                 <p>
-                    Contact Zen Care and tell us what you need.
+                    Contact Zen Home Experts and tell us what you need.
                     We'll help you connect with the appropriate
                     home service.
                 </p>
@@ -735,7 +735,7 @@ include('header.php');
 
                 <h2>
                     Find
-                    <strong>Zen Care.</strong>
+                    <strong>Zen Home Experts.</strong>
                 </h2>
 
                 <?php if (site_setting('address') === SITE_SETTING_DEFS['address'][3]): ?>
@@ -795,12 +795,12 @@ include('header.php');
                 <iframe
                     class="zcs-contact-map"
                     src="https://maps.google.com/maps?q=<?= site_e(rawurlencode(site_setting('map_query'))) ?>&amp;z=13&amp;output=embed"
-                    title="Zen Care location map - <?= site_e(site_setting('map_query')) ?>"
+                    title="Zen Home Experts location map - <?= site_e(site_setting('map_query')) ?>"
                     loading="lazy"
                     referrerpolicy="no-referrer-when-downgrade"
                 ></iframe>
                 <?php else: ?>
-                <img src="<?= site_e(site_setting('contact_image')) ?>" alt="Zen Care location">
+                <img src="<?= site_e(site_setting('contact_image')) ?>" alt="Zen Home Experts location">
                 <?php endif; ?>
 
                 <div class="zcs-ac-image-badge">
@@ -812,7 +812,7 @@ include('header.php');
                     <div>
 
                         <strong>
-                            Zen Care
+                            Zen Home Experts
                         </strong>
 
                         <small>
@@ -853,7 +853,7 @@ include('header.php');
 
                 <h2>
                     Need a Home Service?
-                    Contact Zen Care Today.
+                    Contact Zen Home Experts Today.
                 </h2>
 
                 <p>

@@ -115,7 +115,7 @@ function public_db(): PDO
     require __DIR__ . '/db.php';
     $output = trim(ob_get_clean());
     if (!isset($conn) || !$conn instanceof PDO) {
-        error_log('[ZenCare public API] DB connection failed: ' . $output);
+        error_log('[ZenHomeExperts public API] DB connection failed: ' . $output);
         public_json(500, 'Service temporarily unavailable. Please try again.');
     }
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

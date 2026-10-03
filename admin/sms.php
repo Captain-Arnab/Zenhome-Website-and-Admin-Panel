@@ -109,7 +109,7 @@ include __DIR__ . '/includes/topbar.php';
                             <div class="col-12">
                                 <label class="form-label required" for="promoBody">Message</label>
                                 <textarea class="form-control" id="promoBody" name="message" rows="5" required maxlength="480" data-sms
-                                          data-char-count="#promoCount" data-preview="#promoPreview">Hi {customer_name}, get 20% off on AC Service this week. Use code ZENFIRST. Book now: zencareservices.in - Zen Care</textarea>
+                                          data-char-count="#promoCount" data-preview="#promoPreview">Hi {customer_name}, get 20% off on AC Service this week. Use code ZENFIRST. Book now: zenhomeexperts.com - Zen Home Experts</textarea>
                                 <div class="invalid-feedback">Message is required.</div>
                                 <small class="form-text d-block text-end" id="promoCount"></small>
                             </div>

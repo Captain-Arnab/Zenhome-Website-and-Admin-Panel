@@ -20,7 +20,7 @@ include 'header.php';
             <div class="zcs-login-info">
 
                 <span class="zcs-login-label">
-                    ZEN CARE SERVICES
+                    ZEN HOME EXPERTS
                 </span>
 
                 <h1>
@@ -30,7 +30,7 @@ include 'header.php';
 
                 <p>
                     No problem. Enter your registered mobile number
-                    and we will help you reset your Zen Care account password.
+                    and we will help you reset your Zen Home Experts account password.
                 </p>
 
 
@@ -128,7 +128,7 @@ include 'header.php';
 
                     <p>
                         Enter the mobile number registered
-                        with your Zen Care account. We will send you an OTP.
+                        with your Zen Home Experts account. We will send you an OTP.
                     </p>
 
                 </div>
@@ -357,7 +357,7 @@ include 'header.php';
                 </h2>
 
                 <p>
-                    Contact the Zen Care support team if you are
+                    Contact the Zen Home Experts support team if you are
                     having trouble accessing your account.
                 </p>
 

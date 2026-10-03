@@ -47,7 +47,7 @@ function api(string $call, array $params = [], $default = [], bool $quiet404 = f
             $GLOBALS['apiErrors'][] = $e->getMessage();
         }
     } catch (Throwable $e) {
-        error_log('[ZenCare admin page] ' . $call . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+        error_log('[ZenHomeExperts admin page] ' . $call . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
         $GLOBALS['apiErrors'][] = 'Could not load some data. Please refresh the page.';
     }
     return $default;

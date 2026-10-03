@@ -20,7 +20,7 @@ include 'header.php';
         <div class="zcs-ac-banner-content">
 
             <span class="zcs-ac-banner-label">
-                ZEN CARE HOME SERVICES
+                ZEN HOME EXPERTS HOME SERVICES
             </span>
 
             <h1>
@@ -28,7 +28,7 @@ include 'header.php';
             </h1>
 
             <p>
-                Review your selected Zen Care home services
+                Review your selected Zen Home Experts home services
                 before proceeding to checkout and booking.
             </p>
 
@@ -125,7 +125,7 @@ include 'header.php';
                     </h3>
 
                     <p>
-                        You haven't added any Zen Care services yet.
+                        You haven't added any Zen Home Experts services yet.
                         Browse our services and add the ones you need.
                     </p>
 
@@ -326,14 +326,14 @@ include 'header.php';
 
 
                 <!-- ==================================================
-                     WHY BOOK WITH ZEN CARE
+                     WHY BOOK WITH ZEN HOME EXPERTS
                 =================================================== -->
 
                 <div class="zcs-cart-trust-card">
 
 
                     <h3>
-                        Why Book with Zen Care?
+                        Why Book with Zen Home Experts?
                     </h3>
 
 
@@ -466,7 +466,7 @@ include 'header.php';
                 </h2>
 
                 <p>
-                    Contact Zen Care Services for help choosing
+                    Contact Zen Home Experts for help choosing
                     a service or completing your booking.
                 </p>
 

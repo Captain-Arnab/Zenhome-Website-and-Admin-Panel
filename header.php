@@ -13,7 +13,7 @@ $siteCategories = site_catalog_categories();
 <?php if (!empty($siteMeta['title'])): ?>
     <title><?= htmlspecialchars($siteMeta['title'], ENT_QUOTES, 'UTF-8') ?></title>
 <?php else: ?>
-    <title>Zen Care Services | Professional Home Services</title>
+    <title>Zen Home Experts | Professional Home Services</title>
 <?php endif; ?>
 
 <?php if (!empty($siteMeta['description'])): ?>
@@ -21,7 +21,7 @@ $siteCategories = site_catalog_categories();
           content="<?= htmlspecialchars($siteMeta['description'], ENT_QUOTES, 'UTF-8') ?>">
 <?php else: ?>
     <meta name="description"
-          content="Zen Care Services provides AC service, carpenter service, refrigerator repair, home cleaning, salon, pest control, washing machine repair, chimney repair and water purifier services.">
+          content="Zen Home Experts provides AC service, carpenter service, refrigerator repair, home cleaning, salon, pest control, washing machine repair, chimney repair and water purifier services.">
 <?php endif; ?>
 
     <link rel="icon" href="<?= site_e(site_setting('favicon') ?: site_setting('logo')) ?>">

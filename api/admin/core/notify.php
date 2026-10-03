@@ -117,7 +117,7 @@ function sms_send(?string $mobile, string $message, ?string $templateKey, ?strin
     }
 
     if ($status !== 'Sent') {
-        error_log("[ZenCare admin] SMS $status ($templateKey): $detail");
+        error_log("[ZenHomeExperts admin] SMS $status ($templateKey): $detail");
     }
 
     q(
@@ -138,7 +138,7 @@ function sms_send(?string $mobile, string $message, ?string $templateKey, ?strin
 function push_send(?int $userId, string $title, string $message, array $data = []): array
 {
     $detail = 'Push provider not configured (no FCM credentials / device tokens).';
-    error_log("[ZenCare admin] Push not sent to user #" . (int) $userId . ": $title");
+    error_log("[ZenHomeExperts admin] Push not sent to user #" . (int) $userId . ": $title");
     return ['status' => 'Not sent', 'detail' => $detail];
 }
 
@@ -148,7 +148,7 @@ function push_send(?int $userId, string $title, string $message, array $data = [
  */
 function email_send(?string $email, string $subject, string $message): array
 {
-    error_log("[ZenCare admin] Email not sent to " . ($email ?: '-') . ": $subject");
+    error_log("[ZenHomeExperts admin] Email not sent to " . ($email ?: '-') . ": $subject");
     return ['status' => 'Not sent', 'detail' => 'Email provider not configured.'];
 }
 
@@ -185,7 +185,7 @@ function bulk_send(array $recipients, array $channels, string $title, string $me
     if (in_array('sms', $channels, true)) {
         $reason = sms_unavailable_reason($dltId);
         if ($reason) {
-            error_log("[ZenCare admin] Bulk SMS not sent to $count recipient(s): $reason");
+            error_log("[ZenHomeExperts admin] Bulk SMS not sent to $count recipient(s): $reason");
             q(
                 'INSERT INTO sms_log (mobile, template_key, message, recipients, status, provider_response, created_by, created_at) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?)',
                 [$templateKey, $message, $count, 'Not sent', $reason, $adminId, now()]

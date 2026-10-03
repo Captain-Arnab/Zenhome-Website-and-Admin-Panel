@@ -78,7 +78,7 @@ function support_conversation(PDO $conn, array $ticket, string $customerName): a
         $messages[] = [
             'id'         => (int) $m['id'],
             'from'       => $isAdmin ? 'support' : 'customer',
-            'name'       => $isAdmin ? 'Zen Care Support' : ($m['sender_name'] ?: $customerName),
+            'name'       => $isAdmin ? 'Zen Home Experts Support' : ($m['sender_name'] ?: $customerName),
             'message'    => $m['message'],
             'created_at' => $m['created_at'],
         ];

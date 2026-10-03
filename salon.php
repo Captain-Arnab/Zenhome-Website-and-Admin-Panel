@@ -75,7 +75,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
                 <?php if (!catalog_render_long_description($catalogCategory)): ?>
 
                 <p>
-                    Zen Care Services brings professional facial and beauty
+                    Zen Home Experts brings professional facial and beauty
                     treatments directly to your home for a convenient and
                     relaxing beauty-care experience.
                 </p>
@@ -197,7 +197,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
 
 
 <!-- ======================================================
-     WHY CHOOSE ZEN CARE
+     WHY CHOOSE ZEN HOME EXPERTS
 ====================================================== -->
 
 <section class="zcs-ac-why">
@@ -208,7 +208,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
         <div class="zcs-ac-heading">
 
             <span>
-                WHY CHOOSE ZEN CARE
+                WHY CHOOSE ZEN HOME EXPERTS
             </span>
 
             <h2>
@@ -326,7 +326,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
             <div class="zcs-ac-process-heading">
 
                 <span class="zcs-ac-section-label">
-                    HOW ZEN CARE WORKS
+                    HOW ZEN HOME EXPERTS WORKS
                 </span>
 
                 <h2>
@@ -473,7 +473,7 @@ $catalogServices = site_catalog_services(['category_id' => $catalogCategory['id'
                 <?php if (!catalog_render_section($catalogCategory, 'cta_html')): ?>
 
                 <p>
-                    Schedule your Zen Care beauty service today and enjoy
+                    Schedule your Zen Home Experts beauty service today and enjoy
                     convenient skin care, facial treatments and grooming
                     from the comfort of your home.
                 </p>
