@@ -3421,21 +3421,11 @@ a.zcs-footer-contact-item:hover strong {
     transition: .3s ease;
 }
 
+/* Hover: every card (including the "featured" one) switches to the dark
+   look; back to the plain white/off-white card when not hovered. */
 .zcs-extra-package-card:hover {
     transform: translateY(-5px);
 
-    background: #ffffff;
-
-    border-color: rgba(101,179,46,.35);
-
-    box-shadow:
-        0 18px 38px rgba(19,48,77,.09);
-}
-
-
-/* FEATURED */
-
-.zcs-extra-featured-package {
     background:
         linear-gradient(
             145deg,
@@ -3444,25 +3434,32 @@ a.zcs-footer-contact-item:hover strong {
         );
 
     border-color: transparent;
+
+    box-shadow:
+        0 18px 38px rgba(19,48,77,.09);
 }
 
-.zcs-extra-featured-package h3,
-.zcs-extra-featured-package p,
-.zcs-extra-featured-package ul li {
+.zcs-extra-package-card:hover h3,
+.zcs-extra-package-card:hover p,
+.zcs-extra-package-card:hover ul li {
     color: #ffffff;
 }
 
-.zcs-extra-featured-package p,
-.zcs-extra-featured-package ul li {
+.zcs-extra-package-card:hover p,
+.zcs-extra-package-card:hover ul li {
     color: #c4d0da;
 }
 
-.zcs-extra-featured-package .zcs-extra-package-icon {
+.zcs-extra-package-card:hover ul li i {
+    color: #65b32e;
+}
+
+.zcs-extra-package-card:hover .zcs-extra-package-icon {
     background: #65b32e;
     color: #fff;
 }
 
-.zcs-extra-featured-package a {
+.zcs-extra-package-card:hover > a {
     background: #65b32e;
 }
 
@@ -4162,12 +4159,39 @@ a.zcs-footer-contact-item:hover strong {
 
 
 .zcs-extra-packages .zcs-extra-package-card:hover {
-    background: #ffffff;
+    background:
+        linear-gradient(
+            145deg,
+            #102b50 0%,
+            #163b64 100%
+        );
 
-    border-color: rgba(101, 179, 46, 0.35);
+    border-color: transparent;
 
     box-shadow:
-        0 20px 42px rgba(16, 43, 80, 0.12);
+        0 20px 42px rgba(16, 43, 80, 0.20);
+}
+
+.zcs-extra-packages .zcs-extra-package-card:hover h3 {
+    color: #ffffff;
+}
+
+.zcs-extra-packages .zcs-extra-package-card:hover > p {
+    color: #c5d1dc;
+}
+
+.zcs-extra-packages .zcs-extra-package-card:hover ul li {
+    color: #dce5ec;
+}
+
+.zcs-extra-packages .zcs-extra-package-card:hover .zcs-extra-package-icon {
+    background: #65b32e;
+    color: #ffffff;
+}
+
+.zcs-extra-packages .zcs-extra-package-card:hover > a {
+    background: #65b32e;
+    color: #ffffff;
 }
 
 
@@ -4233,52 +4257,6 @@ a.zcs-footer-contact-item:hover strong {
     font-weight: 800;
 
     border-radius: 10px;
-}
-
-
-/* ==========================================================
-   FEATURED DARK CARD
-========================================================== */
-
-.zcs-extra-packages .zcs-extra-featured-package {
-    background:
-        linear-gradient(
-            145deg,
-            #102b50 0%,
-            #163b64 100%
-        );
-
-    border-color: transparent;
-
-    box-shadow:
-        0 16px 36px rgba(16, 43, 80, 0.20);
-}
-
-
-.zcs-extra-packages .zcs-extra-featured-package h3 {
-    color: #ffffff;
-}
-
-
-.zcs-extra-packages .zcs-extra-featured-package > p {
-    color: #c5d1dc;
-}
-
-
-.zcs-extra-packages .zcs-extra-featured-package ul li {
-    color: #dce5ec;
-}
-
-
-.zcs-extra-packages .zcs-extra-featured-package .zcs-extra-package-icon {
-    background: #65b32e;
-    color: #ffffff;
-}
-
-
-.zcs-extra-packages .zcs-extra-featured-package > a {
-    background: #65b32e;
-    color: #ffffff;
 }
 
 
