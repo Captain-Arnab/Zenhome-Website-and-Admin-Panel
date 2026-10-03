@@ -1,0 +1,35 @@
+# Secrets, database dumps, backups, logs, docs and dependency manifests: never served over HTTP.
+<FilesMatch "(^\.|\.(?i:env|sql|bak|old|orig|log|ini|lock|md|dist|swp|tmp|zip|tar|gz|tgz|7z|rar)$|^(composer|package)(-lock)?\.json$)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# PHP libraries, CLI migration/seed scripts, cron jobs, logs and backups are only used on the server.
+<IfModule mod_alias.c>
+    RedirectMatch 404 /(vendor|database|cron|logs|backups?|tests|\.git)(/|$)
+</IfModule>
+
+# Browser security headers.
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# PHP errors are never shown to visitors (api/runtime.php logs them to logs/).
+# PHP-FPM / CGI hosts read the same settings from .user.ini.
+<IfModule mod_php.c>
+    php_flag display_errors off
+    php_flag display_startup_errors off
+    php_flag log_errors on
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag display_errors off
+    php_flag display_startup_errors off
+    php_flag log_errors on
+</IfModule>

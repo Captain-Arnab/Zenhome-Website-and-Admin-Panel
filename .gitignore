@@ -1,0 +1,31 @@
+# Secrets
+.env
+
+# Dependencies (run `composer install` from api/composer.json to restore)
+/vendor/
+
+# Logs
+/logs/*.log
+/cron/*.log
+/cron/last_run.json
+/cron/*.lock
+
+# Database dumps / backups - never commit a data export
+/database/backups/
+*.sql
+*.sql.gz
+
+# User-uploaded content (admin uploads, partner KYC documents, legacy app images)
+# Keep the folder structure and its protective .htaccess, ignore the files themselves.
+/uploads/**
+!/uploads/.htaccess
+!/uploads/**/.htaccess
+/api/uploads/**
+!/api/uploads/.htaccess
+!/api/uploads/**/.htaccess
+/assets/services/**
+!/assets/services/.htaccess
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
