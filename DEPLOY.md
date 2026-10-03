@@ -72,6 +72,8 @@ records it in `schema_migrations` (re-running is safe; `--status` lists them).
 6. `2026_10_03_006_service_partners_final_consent.sql` – `service_partners.final_consent` (fixes `api/partner_registration.php` inserting a column that didn't exist)
 7. `2026_10_03_007_reviews_featured.sql` – `ratings_feedback.featured` (Admin > Reviews can feature a review on the homepage)
 8. `2026_10_03_008_category_why_process_cta.sql` – category `why_html`/`process_html`/`cta_html` paragraph overrides
+9. `2026_10_03_009_rebrand.sql` – text fields updated from "Zen Care Services" to "Zen Home Experts" (content already matching an admin's own edit is left alone)
+10. `2026_10_03_010_booking_confirm_sms.sql` – `service_booking.confirm_sms_sent_at`, richer `booking_confirmation` SMS body, new `admin_new_booking` SMS template
 
 All migrations are additive (new tables / nullable columns / indexes); no
 existing column is dropped or changed.
@@ -246,4 +248,4 @@ redeploy.
 | **SMS** | SMS templates and gateway settings/test send. |
 | **Reports** | Read-only exports (bookings, payments, customers, services, professionals, by date). |
 | **Admins** | Admin user accounts and roles (Super Admin only). |
-| **Site Settings** | Company name, contact details, address, social/app links, logo/favicon/section images, and the Homepage/Footer text groups (hero label/subtitle/rating/bookings badge, footer CTA, trust strip, footer "Service Area" caption). A field left empty uses its documented default; an image left empty/invalid falls back to the built-in asset. |
+| **Site Settings** | Company name, contact details, address, social/app links, logo/favicon/section images, the Homepage/Footer text groups (hero label/subtitle/rating/bookings badge, footer CTA, trust strip, footer "Service Area" caption), and Admin Alerts (`admin_alert_enabled` toggle + up to 5 `admin_alert_mobiles`, Super Admin only - who gets the "new booking" SMS). A field left empty uses its documented default; an image left empty/invalid falls back to the built-in asset. |

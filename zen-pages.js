@@ -822,7 +822,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 location: val("checkout_address") + ", " + val("checkout_area") + ", " + val("checkout_city") + " - " + val("checkout_pincode"),
                 landmark: landmark,
                 user_id: (API.getUser() || {}).id,
-                amount: total
+                amount: total,
+                payment_method: (paymentMethod === "online" && total > 0) ? "online" : "cash"
             };
 
             // The server prices the booking from these saverpacks ids ("amount" is only a fallback)

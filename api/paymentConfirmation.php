@@ -65,6 +65,14 @@ try {
             $conn->prepare("UPDATE transactions SET status = 'success' WHERE transaction_id = ?")->execute([$merchantTransactionId]);
             $uid = (int) $row['user_id'];
             $conn->prepare("DELETE FROM cart WHERE user_id = ?")->execute([$uid]);
+
+            // Booking-confirmed SMS (customer + admin), only on real success, once per booking.
+            try {
+                require_once __DIR__ . '/admin/core/bootstrap.php';
+                notify_booking_confirmed_for_transaction($merchantTransactionId);
+            } catch (Throwable $e) {
+                error_log('[paymentConfirmation] notify failed: ' . $e->getMessage());
+            }
         }
     } elseif ($state === "FAILED") {
         $conn->prepare("UPDATE transactions SET status = 'failed' WHERE transaction_id = ?")->execute([$merchantTransactionId]);

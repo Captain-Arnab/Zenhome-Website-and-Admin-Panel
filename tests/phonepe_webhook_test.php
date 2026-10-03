@@ -18,6 +18,11 @@ include __DIR__ . '/../api/db.php';
 
 $failures = 0;
 $passed = 0;
+$notifyCalls = [];
+// Stub: never sends a real SMS in tests, just records what would have been notified.
+$stubNotify = function (string $transactionId) use (&$notifyCalls) {
+    $notifyCalls[] = $transactionId;
+};
 
 function check(string $label, bool $condition): void
 {
@@ -61,7 +66,7 @@ $txn = 'QA_TXN_SUCCESS_' . bin2hex(random_bytes(3));
 $conn->prepare("INSERT INTO transactions (transaction_id, user_id, amount, status, payment_mode) VALUES (?, ?, 100, 'pending', 'PHONEPE')")->execute([$txn, $testUserId]);
 $conn->prepare("INSERT INTO cart (user_id, items) VALUES (?, '[{\"id\":1}]') ON DUPLICATE KEY UPDATE items = VALUES(items)")->execute([$testUserId]);
 $verify = fn($h, $b) => stub_callback($txn, 'COMPLETED');
-$res = phonepe_handle_webhook([], '{}', $conn, $verify);
+$res = phonepe_handle_webhook([], '{}', $conn, $verify, $stubNotify);
 check('success: http 200', $res['http'] === 200);
 check('success: status ok', $res['result']['status'] === 'ok');
 check('success: applied_status success', $res['result']['applied_status'] === 'success');
@@ -71,18 +76,20 @@ check('success: transaction row updated to success', $row->fetchColumn() === 'su
 $cartLeft = $conn->prepare('SELECT COUNT(*) FROM cart WHERE user_id = ?');
 $cartLeft->execute([$testUserId]);
 check('success: cart cleared', (int) $cartLeft->fetchColumn() === 0);
+check('success: notify called once', count($notifyCalls) === 1 && $notifyCalls[0] === $txn);
 
 // --- Case 2: duplicate callback (same success event delivered again) ---
-$res2 = phonepe_handle_webhook([], '{}', $conn, $verify);
+$res2 = phonepe_handle_webhook([], '{}', $conn, $verify, $stubNotify);
 check('duplicate: http 200', $res2['http'] === 200);
 check('duplicate: status duplicate', $res2['result']['status'] === 'duplicate');
+check('duplicate: notify NOT called again', count($notifyCalls) === 1);
 cleanup($conn, $txn, $testUserId);
 
 // --- Case 3: failed ---
 $txn = 'QA_TXN_FAILED_' . bin2hex(random_bytes(3));
 $conn->prepare("INSERT INTO transactions (transaction_id, user_id, amount, status, payment_mode) VALUES (?, ?, 100, 'pending', 'PHONEPE')")->execute([$txn, $testUserId]);
 $verify = fn($h, $b) => stub_callback($txn, 'FAILED');
-$res = phonepe_handle_webhook([], '{}', $conn, $verify);
+$res = phonepe_handle_webhook([], '{}', $conn, $verify, $stubNotify);
 check('failed: http 200', $res['http'] === 200);
 check('failed: applied_status failed', $res['result']['applied_status'] === 'failed');
 $row = $conn->prepare('SELECT status FROM transactions WHERE transaction_id = ?');
@@ -94,7 +101,7 @@ cleanup($conn, $txn, $testUserId);
 $txn = 'QA_TXN_PENDING_' . bin2hex(random_bytes(3));
 $conn->prepare("INSERT INTO transactions (transaction_id, user_id, amount, status, payment_mode) VALUES (?, ?, 100, 'pending', 'PHONEPE')")->execute([$txn, $testUserId]);
 $verify = fn($h, $b) => stub_callback($txn, 'PENDING');
-$res = phonepe_handle_webhook([], '{}', $conn, $verify);
+$res = phonepe_handle_webhook([], '{}', $conn, $verify, $stubNotify);
 check('pending: http 200', $res['http'] === 200);
 // Already pending -> this is itself a duplicate/no-op of the existing state.
 check('pending: status duplicate (already pending)', $res['result']['status'] === 'duplicate');
@@ -106,7 +113,7 @@ $conn->prepare("INSERT INTO transactions (transaction_id, user_id, amount, statu
 $verify = function ($h, $b) {
     throw new \PhonePe\common\exceptions\PhonePeException('Invalid callback');
 };
-$res = phonepe_handle_webhook([], '{}', $conn, $verify);
+$res = phonepe_handle_webhook([], '{}', $conn, $verify, $stubNotify);
 check('invalid signature: http 401', $res['http'] === 401);
 check('invalid signature: status invalid_signature', $res['result']['status'] === 'invalid_signature');
 $row = $conn->prepare('SELECT status FROM transactions WHERE transaction_id = ?');
@@ -117,7 +124,7 @@ cleanup($conn, $txn, $testUserId);
 // --- Case 6: unknown order ---
 $unknownTxn = 'QA_TXN_DOES_NOT_EXIST_' . bin2hex(random_bytes(3));
 $verify = fn($h, $b) => stub_callback($unknownTxn, 'COMPLETED');
-$res = phonepe_handle_webhook([], '{}', $conn, $verify);
+$res = phonepe_handle_webhook([], '{}', $conn, $verify, $stubNotify);
 check('unknown order: http 200 (acknowledged, nothing to update)', $res['http'] === 200);
 check('unknown order: status unknown_order', $res['result']['status'] === 'unknown_order');
 

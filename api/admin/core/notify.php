@@ -17,6 +17,7 @@ const SMS_VARIABLES = [
     '{customer_name}', '{booking_id}', '{service_name}', '{booking_date}', '{time_slot}',
     '{professional_name}', '{professional_mobile}', '{booking_status}', '{reason}',
     '{amount}', '{transaction_id}', '{coupon_code}', '{offer_value}',
+    '{payment_mode}', '{customer_mobile}', '{area}',
 ];
 
 const SCHEDULED_PENDING_DETAIL = 'Waiting for cron/send_scheduled.php.';
@@ -262,4 +263,131 @@ function notify_booking_customer(array $booking, string $event, array $extraVars
     );
 
     return ['status' => $status, 'detail' => $detail, 'channels' => $results];
+}
+
+require_once ZC_ROOT . '/api/site_settings_helper.php';
+
+/** One sms_log row recording that nothing was sent to the admin, and why. */
+function notify_admin_log_skip(int $bookingId, string $reason, ?int $adminId): void
+{
+    q(
+        'INSERT INTO sms_log (mobile, booking_id, template_key, message, recipients, status, provider_response, created_by, created_at)
+         VALUES (NULL, ?, ?, ?, 0, ?, ?, ?, ?)',
+        [$bookingId, 'admin_new_booking', '', 'Not sent', $reason, $adminId, now()]
+    );
+}
+
+/**
+ * Alerts the configured admin mobile numbers (Site Settings > Admin Alerts)
+ * about a newly confirmed booking. One sms_log row per recipient; a single
+ * "Not sent" row with the real reason when alerts are off, unconfigured or
+ * the template cannot be used. Never throws.
+ */
+function notify_admin_new_booking(array $booking, ?array $admin = null): array
+{
+    $adminId = $admin['id'] ?? null;
+    try {
+        if (site_setting('admin_alert_enabled') !== '1') {
+            notify_admin_log_skip($booking['id'], 'Admin SMS alerts are turned off (Site Settings > Admin Alerts).', $adminId);
+            return ['status' => 'Not sent', 'detail' => 'Admin alerts are off.'];
+        }
+        $mobiles = site_admin_alert_mobiles();
+        if (!$mobiles) {
+            notify_admin_log_skip($booking['id'], 'No admin alert mobile numbers configured (Site Settings > Admin Alerts).', $adminId);
+            return ['status' => 'Not sent', 'detail' => 'No admin alert mobile numbers configured.'];
+        }
+        $template = q_one('SELECT * FROM sms_templates WHERE template_key = ?', ['admin_new_booking']);
+        if (!$template || (int) $template['status'] !== 1) {
+            notify_admin_log_skip($booking['id'], 'SMS template "admin_new_booking" is disabled or missing.', $adminId);
+            return ['status' => 'Not sent', 'detail' => 'Template disabled.'];
+        }
+
+        $paymentMode = $booking['payment_method'] === 'Online' ? 'Paid online' : 'Cash on service';
+        $vars = [
+            'booking_id'      => $booking['code'],
+            'customer_name'   => $booking['customer'] ?: 'Customer',
+            'customer_mobile' => $booking['raw_mobile'] ?: '-',
+            'service_name'    => mb_strimwidth((string) $booking['service'], 0, 50, '...'),
+            'booking_date'    => $booking['date'] ? date('d M Y', strtotime($booking['date'])) : '',
+            'time_slot'       => $booking['slot'],
+            'area'            => mb_strimwidth((string) ($booking['area'] ?: '-'), 0, 30, '...'),
+            'amount'          => (string) (int) round((float) $booking['amount']),
+            'payment_mode'    => $paymentMode,
+        ];
+        $message = sms_render($template['body'], $vars);
+
+        $sent = 0;
+        foreach ($mobiles as $mobile) {
+            $res = sms_send($mobile, $message, 'admin_new_booking', $template['dlt_template_id'], ['booking_id' => $booking['id'], 'admin_id' => $adminId]);
+            if ($res['status'] === 'Sent') {
+                $sent++;
+            }
+        }
+        $count = count($mobiles);
+        $status = $sent === $count ? 'Sent' : ($sent > 0 ? 'Partially sent' : 'Not sent');
+        return ['status' => $status, 'detail' => "$sent of $count sent"];
+    } catch (Throwable $e) {
+        error_log('[notify] admin_new_booking failed for booking #' . $booking['id'] . ': ' . $e->getMessage());
+        return ['status' => 'Not sent', 'detail' => 'Internal error.'];
+    }
+}
+
+/**
+ * Sends the booking-confirmed SMS to the customer (template booking_confirmation)
+ * and an alert SMS to the admin numbers (template admin_new_booking), exactly
+ * once per booking. Call this from the cash booking path right after the
+ * booking is created, and from the online-payment-success paths (never at
+ * the pending stage) - paymentConfirmation.php and the webhook handler.
+ *
+ * service_booking.confirm_sms_sent_at is claimed atomically first, so a
+ * second call for the same booking (retry, duplicate webhook delivery, page
+ * refresh) is a guaranteed no-op - nothing is sent or logged again.
+ *
+ * Never throws: an SMS failure must never fail or delay the booking/payment
+ * response.
+ */
+function notify_booking_confirmed(int $bookingId, ?array $admin = null): array
+{
+    try {
+        $claimed = q('UPDATE service_booking SET confirm_sms_sent_at = ? WHERE ID = ? AND confirm_sms_sent_at IS NULL', [now(), $bookingId])->rowCount() > 0;
+        if (!$claimed) {
+            return ['status' => 'skipped', 'detail' => 'Confirmation SMS already sent for this booking.'];
+        }
+        $booking = booking_find($bookingId);
+        if (!$booking) {
+            return ['status' => 'skipped', 'detail' => 'Booking not found.'];
+        }
+        $paymentMode = $booking['payment_method'] === 'Online' ? 'Paid online' : 'Cash on service';
+        $customer = notify_booking_customer($booking, 'booking_confirmation', [
+            'amount'       => (string) (int) round((float) $booking['amount']),
+            'payment_mode' => $paymentMode,
+        ], $admin);
+        $adminAlert = notify_admin_new_booking($booking, $admin);
+        return ['status' => 'ok', 'customer' => $customer, 'admin' => $adminAlert];
+    } catch (Throwable $e) {
+        error_log('[notify] booking confirmation failed for booking #' . $bookingId . ': ' . $e->getMessage());
+        return ['status' => 'error', 'detail' => $e->getMessage()];
+    }
+}
+
+/**
+ * Website checkout starts online payments with order_id "ZC-<unique_booking_id>"
+ * (zen-pages.js, api/payments.php). Called on a successful payment from
+ * paymentConfirmation.php and the webhook handler; a no-op for transaction
+ * ids not in that format (app/legacy flows with no linked booking). Never
+ * throws.
+ */
+function notify_booking_confirmed_for_transaction(string $transactionId): void
+{
+    if (!preg_match('/^ZC-(\d+-\d+)$/', $transactionId, $m)) {
+        return;
+    }
+    try {
+        $bookingId = q_value('SELECT ID FROM service_booking WHERE unique_booking_id = ?', [$m[1]]);
+        if ($bookingId) {
+            notify_booking_confirmed((int) $bookingId);
+        }
+    } catch (Throwable $e) {
+        error_log('[notify] booking lookup failed for transaction ' . $transactionId . ': ' . $e->getMessage());
+    }
 }

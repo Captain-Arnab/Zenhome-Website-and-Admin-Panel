@@ -12,7 +12,7 @@
  */
 require_once __DIR__ . '/site_content.php';
 
-const SITE_SETTING_GROUPS = ['Homepage', 'Contact', 'Social & Apps', 'Footer', 'Branding & Images'];
+const SITE_SETTING_GROUPS = ['Homepage', 'Contact', 'Social & Apps', 'Footer', 'Branding & Images', 'Admin Alerts'];
 
 /** key => [label, type, group, default, fallback, help] */
 const SITE_SETTING_DEFS = [
@@ -49,6 +49,8 @@ const SITE_SETTING_DEFS = [
     'about_image_1' => ['About page image (top)', 'image', 'Branding & Images', 'images/site/about-home-services.webp', true, ''],
     'about_image_2' => ['About page image (lower)', 'image', 'Branding & Images', 'images/site/about-professionals.webp', true, ''],
     'contact_image' => ['Contact page image', 'image', 'Branding & Images', 'images/site/contact-support.webp', true, ''],
+    'admin_alert_enabled' => ['Send admin SMS alerts', 'bool', 'Admin Alerts', '0', true, 'When on, an SMS is sent to the numbers below each time a booking is confirmed.'],
+    'admin_alert_mobiles'  => ['Admin alert mobile numbers', 'mobile_list', 'Admin Alerts', '', true, 'Comma-separated 10-digit mobile numbers (max 5) to notify on new bookings.'],
 ];
 
 /** Stored values (key => string) or null when the table is unavailable. */
@@ -127,6 +129,22 @@ function site_whatsapp_url(): string
 function site_address_lines(): array
 {
     return array_values(array_filter(array_map('trim', preg_split('/\R/', site_setting('address'))), 'strlen'));
+}
+
+/** Admin alert mobile numbers (10-digit), parsed from the comma-separated setting; [] when alerts are off or none configured. */
+function site_admin_alert_mobiles(): array
+{
+    if (site_setting('admin_alert_enabled') !== '1') {
+        return [];
+    }
+    $out = [];
+    foreach (explode(',', site_setting('admin_alert_mobiles')) as $raw) {
+        $digits = preg_replace('/\D+/', '', $raw);
+        if (preg_match('/^[6-9]\d{9}$/', $digits)) {
+            $out[] = $digits;
+        }
+    }
+    return array_slice(array_values(array_unique($out)), 0, 5);
 }
 
 /** Footer trust-strip item ('title' / 'text'); first line = title, rest = description. */

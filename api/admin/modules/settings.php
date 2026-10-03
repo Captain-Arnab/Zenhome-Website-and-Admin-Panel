@@ -27,6 +27,32 @@ function settings_get(array $in, ?array $admin): array
     return ok(['groups' => SITE_SETTING_GROUPS, 'items' => $items]);
 }
 
+/** Comma-separated 10-digit Indian mobile numbers, max 5; invalid entries are rejected, not silently dropped. */
+function settings_mobile_list(Validator $v, string $key, string $label): ?string
+{
+    $raw = trim((string) ($v->str($key, $label, ['max' => 150, 'default' => '']) ?? ''));
+    if ($raw === '') {
+        return '';
+    }
+    $numbers = [];
+    foreach (explode(',', $raw) as $part) {
+        $digits = preg_replace('/\D+/', '', $part);
+        if (strlen($digits) === 12 && str_starts_with($digits, '91')) {
+            $digits = substr($digits, 2);
+        }
+        if (!preg_match('/^[6-9]\d{9}$/', $digits)) {
+            $v->error($key, 'Enter 10-digit mobile numbers separated by commas, e.g. 9876543210,9123456780.');
+            return null;
+        }
+        $numbers[] = $digits;
+    }
+    if (count($numbers) > 5) {
+        $v->error($key, 'Enter at most 5 mobile numbers.');
+        return null;
+    }
+    return implode(',', array_values(array_unique($numbers)));
+}
+
 /** Digits of a phone number: 10-digit Indian numbers, or 10-13 digits with country / STD code. */
 function settings_phone(Validator $v, string $key, string $label, bool $mobileOnly): ?string
 {
@@ -54,11 +80,13 @@ function settings_save(array $in, ?array $admin): array
             continue;
         }
         $values[$key] = match ($type) {
-            'phone'    => settings_phone($v, $key, $label, $key === 'whatsapp'),
-            'email'    => $v->email($key, $label, ['default' => '']),
-            'url'      => $v->str($key, $label, ['max' => 255, 'default' => '', 'pattern' => '#^(https?://[^\s<>"]+)?$#i', 'pattern_message' => 'Enter a full link starting with https://']),
-            'textarea' => $v->str($key, $label, ['max' => 600, 'default' => '']),
-            default    => $v->str($key, $label, ['max' => 150, 'default' => '']),
+            'phone'       => settings_phone($v, $key, $label, $key === 'whatsapp'),
+            'email'       => $v->email($key, $label, ['default' => '']),
+            'url'         => $v->str($key, $label, ['max' => 255, 'default' => '', 'pattern' => '#^(https?://[^\s<>"]+)?$#i', 'pattern_message' => 'Enter a full link starting with https://']),
+            'textarea'    => $v->str($key, $label, ['max' => 600, 'default' => '']),
+            'bool'        => $v->bool($key) ? '1' : '0',
+            'mobile_list' => settings_mobile_list($v, $key, $label),
+            default       => $v->str($key, $label, ['max' => 150, 'default' => '']),
         };
     }
     $v->check();

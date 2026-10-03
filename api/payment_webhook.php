@@ -11,6 +11,7 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->safeLoad();
 require_once __DIR__ . '/phonepe_client.php';
 require_once __DIR__ . '/phonepe_webhook_handler.php';
+require_once __DIR__ . '/admin/core/bootstrap.php';
 include __DIR__ . '/db.php';
 
 $body = file_get_contents('php://input');
@@ -24,9 +25,10 @@ $verify = function (array $headers, string $body) {
         (string) ($_ENV['PHONEPE_WEBHOOK_PASSWORD'] ?? '')
     );
 };
+$notify = 'notify_booking_confirmed_for_transaction';
 
 try {
-    $outcome = phonepe_handle_webhook($headers, $body, $conn, $verify);
+    $outcome = phonepe_handle_webhook($headers, $body, $conn, $verify, $notify);
 } catch (Throwable $e) {
     error_log('[payment_webhook] ' . $e->getMessage());
     http_response_code(500);

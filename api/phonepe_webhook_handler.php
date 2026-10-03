@@ -16,9 +16,13 @@
  * @param callable             $verify    fn(array $headers, string $body): CallbackResponse: wraps
  *                                        get_phonepe_client()->verifyCallbackResponse(...); throws on
  *                                        a bad signature. Swappable with a stub in tests.
+ * @param callable             $notify    fn(string $transactionId): void: sends the booking-confirmed
+ *                                        SMS (customer + admin) when the transaction is a website
+ *                                        booking payment. Called only on a fresh (non-duplicate)
+ *                                        success. Swappable with a no-op stub in tests - never a real SMS there.
  * @return array{http:int, result:array}  HTTP status to send and the JSON body to log/echo.
  */
-function phonepe_handle_webhook(array $headers, string $body, PDO $conn, callable $verify): array
+function phonepe_handle_webhook(array $headers, string $body, PDO $conn, callable $verify, callable $notify): array
 {
     try {
         $callback = $verify($headers, $body);
@@ -56,6 +60,11 @@ function phonepe_handle_webhook(array $headers, string $body, PDO $conn, callabl
     $conn->prepare('UPDATE transactions SET status = ? WHERE transaction_id = ?')->execute([$newStatus, $merchantOrderId]);
     if ($newStatus === 'success') {
         $conn->prepare('DELETE FROM cart WHERE user_id = ?')->execute([(int) $txn['user_id']]);
+        try {
+            $notify($merchantOrderId);
+        } catch (Throwable $e) {
+            error_log('[payment_webhook] notify failed for ' . $merchantOrderId . ': ' . $e->getMessage());
+        }
     }
 
     return ['http' => 200, 'result' => ['status' => 'ok', 'transaction_id' => $merchantOrderId, 'applied_status' => $newStatus, 'previous_status' => $txn['status']]];

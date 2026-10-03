@@ -43,6 +43,11 @@ $landmark = isset($data['landmark']) ? $data['landmark'] : null;
 $user_id = $data['user_id'];  // Get the user ID from the request
 $service_slot = $data['service_slot'];
 $status = "Pending Confirmation"; // Default status
+// Optional, backward compatible: apps/pages that don't send it default to
+// "cash" (pay-after-service), which is correct for them - only the website
+// checkout's "online" radio sends payment_method=online, and that case gets
+// its confirmation SMS later, on payment success, not here.
+$isOnlinePayment = ($data['payment_method'] ?? 'cash') === 'online';
 
 legacy_require_user($legacy, $user_id);
 
@@ -137,6 +142,20 @@ try {
     http_response_code(500);
     echo json_encode(["status" => "error", "message" => "Error: could not save the booking. Please try again."]);
     exit;
+}
+
+// Pay-after-service booking: confirm now. Online-payment bookings get their
+// SMS later, on payment success (paymentConfirmation.php / the webhook),
+// never at this pending stage. An SMS failure must never fail/delay this response.
+// Mirrors the website's own decision (zen-pages.js): a 100%-off coupon
+// leaves nothing to pay online, so it is confirmed immediately too.
+if (!$isOnlinePayment || $payable === null || $payable <= 0) {
+    try {
+        require_once __DIR__ . '/admin/core/bootstrap.php';
+        notify_booking_confirmed((int) $id);
+    } catch (Throwable $e) {
+        error_log('[book_appointment] notify failed: ' . $e->getMessage());
+    }
 }
 
 // Send the response with the unique booking ID

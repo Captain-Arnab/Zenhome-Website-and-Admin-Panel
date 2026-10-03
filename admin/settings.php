@@ -62,11 +62,22 @@ include __DIR__ . '/includes/topbar.php';
                                             </div>
                                         <?php endif; ?>
                                     </div>
+                                <?php elseif ($s['type'] === 'bool'): ?>
+                                    <div class="col-md-6">
+                                        <label class="form-label d-block"><?= e($s['label']) ?></label>
+                                        <div class="form-check form-switch mt-1">
+                                            <input class="form-check-input" type="checkbox" id="<?= e($id) ?>" name="<?= e($s['key']) ?>" value="1" <?= $s['value'] === '1' ? 'checked' : '' ?>>
+                                            <label class="form-check-label fs-13" for="<?= e($id) ?>"><?= $s['value'] === '1' ? 'On' : 'Off' ?></label>
+                                        </div>
+                                        <?php if ($s['help'] !== ''): ?><div class="form-text"><?= e($s['help']) ?></div><?php endif; ?>
+                                    </div>
                                 <?php else: ?>
                                     <div class="<?= $s['type'] === 'textarea' ? 'col-12' : 'col-md-6' ?>">
                                         <label class="form-label" for="<?= e($id) ?>"><?= e($s['label']) ?></label>
                                         <?php if ($s['type'] === 'textarea'): ?>
                                             <textarea class="form-control" id="<?= e($id) ?>" name="<?= e($s['key']) ?>" rows="3" maxlength="600"><?= e($s['value']) ?></textarea>
+                                        <?php elseif ($s['type'] === 'mobile_list'): ?>
+                                            <input class="form-control" id="<?= e($id) ?>" name="<?= e($s['key']) ?>" value="<?= e($s['value']) ?>" type="text" maxlength="150" placeholder="9876543210, 9123456780">
                                         <?php else: ?>
                                             <input class="form-control" id="<?= e($id) ?>" name="<?= e($s['key']) ?>" value="<?= e($s['value']) ?>"
                                                    type="<?= ['email' => 'email', 'url' => 'url', 'phone' => 'tel'][$s['type']] ?? 'text' ?>"
