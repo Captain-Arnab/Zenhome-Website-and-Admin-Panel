@@ -1,64 +1,64 @@
 <?php
-// MUST be the first thing in the file, before session or DB
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Auth-Token, X-Requested-With");
-    header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-    http_response_code(200);
-    exit();
+/**
+ * Customer sign-up. POST {firstname, lastname, email, phone, address, password}
+ * (first_name / last_name are accepted too). No token is issued: the user
+ * signs in through login.php afterwards. 201 on success.
+ *
+ * Rules: valid email, password 6-72 characters, Indian mobile ^[6-9]\d{9}$
+ * (+91 / leading 0 stripped). At most 10 sign-ups per hour per IP.
+ */
+require __DIR__ . '/public_helper.php';
+require __DIR__ . '/auth_helper.php';
+
+const REGISTER_MAX_PER_HOUR = 10;
+
+public_cors('POST, OPTIONS');
+public_require_method('POST');
+
+$in = public_input();
+$first_name = public_str($in, 'firstname') ?: public_str($in, 'first_name');
+$last_name = public_str($in, 'lastname') ?: public_str($in, 'last_name');
+$email = public_str($in, 'email');
+$address = public_str($in, 'address');
+$password = isset($in['password']) && is_string($in['password']) ? $in['password'] : '';
+
+if ($first_name === '' || $email === '' || public_str($in, 'phone') === '' || $address === '' || $password === '') {
+    public_json(400, 'All fields are required.');
 }
 
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Auth-Token, X-Requested-With");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Content-Type: application/json");
-
-include 'db.php';
-
-$data = json_decode(file_get_contents("php://input"));
-
-if (
-    empty($data->firstname) ||
-    empty($data->lastname) ||
-    empty($data->email) ||
-    empty($data->phone) ||
-    empty($data->address) ||
-    empty($data->password)
-) {
-    http_response_code(400);
-    echo json_encode(["statusCode" => 400, "status" => "error", "message" => "All fields are required."]);
-    exit();
+$errors = [];
+if (mb_strlen($first_name) > 100) {
+    $errors['firstname'] = 'First name is too long.';
+}
+if (mb_strlen($last_name) > 100) {
+    $errors['lastname'] = 'Last name is too long.';
+}
+if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 150) {
+    $errors['email'] = 'Enter a valid email address.';
+}
+$phone = zc_normalize_phone($in['phone']);
+if ($phone === null) {
+    $errors['phone'] = 'Enter a valid 10-digit mobile number.';
+}
+if (strlen($password) < 6) {
+    $errors['password'] = 'Password must be at least 6 characters.';
+} elseif (strlen($password) > 72) {
+    $errors['password'] = 'Password must be 72 characters or fewer.';
+}
+if ($errors) {
+    public_json(400, reset($errors), null, $errors);
 }
 
-$first_name = trim($data->firstname);
-$last_name  = trim($data->lastname);
-$email      = trim($data->email);
-$phone      = trim(preg_replace('/[^0-9]/', '', $data->phone));
-if (strlen($phone) === 11 && $phone[0] === '0') {
-    $phone = substr($phone, 1);
-}
-if (strlen($phone) === 12 && substr($phone, 0, 2) === '91') {
-    $phone = substr($phone, 2);
-}
-$address    = trim($data->address);
-$password   = password_hash($data->password, PASSWORD_DEFAULT);
-
-if (strlen($phone) !== 10) {
-    http_response_code(400);
-    echo json_encode(["statusCode" => 400, "status" => "error", "message" => "Invalid phone number."]);
-    exit();
+$conn = public_db();
+if (!zc_rate_limit_hit($conn, 'register:ip:' . zc_client_ip_key(), REGISTER_MAX_PER_HOUR, 3600)) {
+    header('Retry-After: 3600');
+    public_json(429, 'Too many sign-up attempts. Please try again later.');
 }
 
-$check_stmt = $conn->prepare("SELECT ID FROM users WHERE email = ? OR phone = ?");
+$check_stmt = $conn->prepare('SELECT ID FROM users WHERE email = ? OR phone = ?');
 $check_stmt->execute([$email, $phone]);
 if ($check_stmt->fetch(PDO::FETCH_ASSOC)) {
-    http_response_code(400);
-    echo json_encode([
-        "statusCode" => 400,
-        "status" => "error",
-        "message" => "User with this email or phone already exists.",
-    ]);
-    exit();
+    public_json(400, 'User with this email or phone already exists.');
 }
 
 try {
@@ -66,31 +66,21 @@ try {
         INSERT INTO users (first_name, last_name, email, phone, address, password, status)
         VALUES (?, ?, ?, ?, ?, ?, 'Active')
     ");
-    $stmt->execute([$first_name, $last_name, $email, $phone, $address, $password]);
+    $stmt->execute([$first_name, $last_name, $email, $phone, $address, password_hash($password, PASSWORD_DEFAULT)]);
     $user_id = (int) $conn->lastInsertId();
 } catch (PDOException $e) {
     if ($e->getCode() == 23000) {
-        http_response_code(400);
-        echo json_encode([
-            "statusCode" => 400,
-            "status" => "error",
-            "message" => "User with this email or phone already exists.",
-        ]);
-    } else {
-        http_response_code(500);
-        echo json_encode([
-            "statusCode" => 500,
-            "status" => "error",
-            "message" => "Registration failed. Please try again.",
-        ]);
+        public_json(400, 'User with this email or phone already exists.');
     }
-    exit();
+    error_log('[ZenHomeExperts register] ' . $e->getMessage());
+    public_json(500, 'Registration failed. Please try again.');
 }
 
 http_response_code(201);
 echo json_encode([
-    "statusCode" => 200,
-    "status" => "success",
-    "message" => "Registration successful. You can now log in with your phone and password.",
-    "user_id" => $user_id,
-]);
+    'statusCode' => 201,
+    'status' => 'success',
+    'message' => 'Registration successful. You can now log in with your phone and password.',
+    'user_id' => $user_id,
+    'data' => ['user_id' => $user_id],
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

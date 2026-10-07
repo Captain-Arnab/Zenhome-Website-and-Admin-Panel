@@ -40,6 +40,39 @@ define('ZC_RUNTIME', true);
     }
 })();
 
+if (!function_exists('zc_json_exit')) {
+    /** Ends the request with the standard JSON envelope; HTTP code and statusCode always match. */
+    function zc_json_exit(int $code, string $message, $data = null, array $errors = []): void
+    {
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        if (!headers_sent()) {
+            http_response_code($code);
+            header('Content-Type: application/json; charset=utf-8');
+            header('Access-Control-Allow-Origin: *');
+        }
+        $body = ['statusCode' => $code, 'status' => $code < 400 ? 'success' : 'error', 'message' => $message];
+        if ($data !== null) {
+            $body['data'] = $data;
+        }
+        if ($errors) {
+            $body['errors'] = $errors;
+        }
+        echo json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+        exit;
+    }
+}
+
+// API scripts answer uncaught errors with the JSON 500 envelope instead of an
+// empty body; website pages keep the normal PHP error page.
+if (PHP_SAPI !== 'cli' && strpos(str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? '')), '/api/') !== false) {
+    set_exception_handler(function (Throwable $e): void {
+        error_log('[ZenHomeExperts API] Uncaught ' . get_class($e) . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+        zc_json_exit(500, 'Server error. Please try again.');
+    });
+}
+
 if (!function_exists('app_url')) {
     /** Canonical site base URL (APP_URL in .env). One place to change the domain. */
     function app_url(string $path = ''): string

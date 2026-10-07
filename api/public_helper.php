@@ -60,6 +60,29 @@ function public_json_revalidate(string $message, $data): void
     exit;
 }
 
+/**
+ * Catch-all for the legacy endpoints that throw plain Exception for their
+ * own validation messages: those are shown (400); anything else (database,
+ * gateway) is logged and answered with a generic 500 / 502. Keeps the legacy
+ * "success"/"error" keys next to the standard envelope.
+ */
+function public_legacy_error(Throwable $e, string $tag): void
+{
+    $own = get_class($e) === Exception::class;
+    if ($own) {
+        $code = 400;
+        $message = $e->getMessage();
+    } else {
+        error_log("[$tag] " . get_class($e) . ': ' . $e->getMessage());
+        $gateway = stripos(get_class($e), 'PhonePe') !== false;
+        $code = $gateway ? 502 : 500;
+        $message = $gateway ? 'Payment gateway error. Please try again.' : 'Server error. Please try again.';
+    }
+    http_response_code($code);
+    echo json_encode(['statusCode' => $code, 'status' => 'error', 'success' => false, 'message' => $message, 'error' => $message],
+        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+}
+
 function public_require_method(string ...$methods): void
 {
     if (!in_array($_SERVER['REQUEST_METHOD'] ?? 'GET', $methods, true)) {
@@ -111,12 +134,13 @@ function public_db(): PDO
     if ($pdo instanceof PDO) {
         return $pdo;
     }
+    $zcDbSoftFail = true;
     ob_start();
     require __DIR__ . '/db.php';
     $output = trim(ob_get_clean());
     if (!isset($conn) || !$conn instanceof PDO) {
         error_log('[ZenHomeExperts public API] DB connection failed: ' . $output);
-        public_json(500, 'Service temporarily unavailable. Please try again.');
+        public_json(503, 'Service temporarily unavailable. Please try again.');
     }
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
@@ -124,11 +148,13 @@ function public_db(): PDO
     return $pdo = $conn;
 }
 
-/** Absolute URL of the website root (https://host/path/), for image links in API responses. */
+/**
+ * Absolute URL of the website root with a trailing slash, for image links in
+ * API responses. Built from APP_URL (app_url()), never from the request Host
+ * header, so links are always the canonical https domain.
+ */
 function public_site_url(): string
 {
-    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $dir = rtrim(str_replace('\\', '/', dirname(dirname($_SERVER['SCRIPT_NAME'] ?? '/api/x.php'))), '/');
-    return ($https ? 'https' : 'http') . '://' . $host . $dir . '/';
+    require_once __DIR__ . '/runtime.php';
+    return rtrim(app_url(), '/') . '/';
 }

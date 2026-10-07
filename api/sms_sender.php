@@ -1,15 +1,27 @@
 <?php
 /**
- * ZEN HOME EXPERTS – Send OTP via Bulk SMS Hyderabad gateway.
- * Include this file and call sendOtpSms($phone, $otp) from login.php and register.php.
+ * ZEN HOME EXPERTS - Send OTP SMS via the Bulk SMS Hyderabad gateway.
+ * Called by login.php, password_reset.php and admin/assignTechnician.php:
+ * sendOtpSms($phone, $otp, $purpose).
  *
- * Credentials:
- * Username: ZENCARE, Password: 123Zen, Sender: ZENCAE
- * DLT: peid=1701177140036334378, tpid=1707177191868029146
+ * Gateway settings come from .env (the same keys the admin SMS module uses):
+ *   SMS_GATEWAY_URL, SMS_GATEWAY_USER, SMS_GATEWAY_PASSWORD, SMS_GATEWAY_SENDER,
+ *   SMS_GATEWAY_PEID, SMS_OTP_TEMPLATE_ID (DLT template id of the OTP text).
+ * SMS_OTP_ENABLED=false turns OTP sending off; when it is not set OTPs are sent.
+ * SMS_ENABLED only controls the admin notification/campaign SMS, not OTPs.
+ *
+ * Returns ['success' => bool, 'error' => string] and never exposes the
+ * gateway credentials or raw response to the caller's client.
  */
+require_once __DIR__ . '/runtime.php';
+
+function sms_sender_env(string $key, string $default = ''): string {
+    $value = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
+    return ($value === false || $value === null) ? $default : trim((string) $value);
+}
+
 function sendOtpSms($mobile, $otp, $purpose = 'login') {
-    // Sanitize mobile number
-    $mobile = preg_replace('/[^0-9]/', '', $mobile);
+    $mobile = preg_replace('/[^0-9]/', '', (string) $mobile);
     if (strlen($mobile) === 11 && substr($mobile, 0, 1) === '0') {
         $mobile = substr($mobile, 1);
     }
@@ -20,39 +32,59 @@ function sendOtpSms($mobile, $otp, $purpose = 'login') {
         return ['success' => false, 'error' => 'Invalid mobile number'];
     }
 
-    $user_id  = 'ZENCARE';
-    $pwd      = '123Zen';
-    $sender   = 'ZENCAE';
-    $peid     = '1701177140036334378';
-    $tpid     = '1707177191868029146';
-
-    $message = "Your OTP is $otp for $purpose.\nPlease do not share this code with anyone.\n- ZEN HOME EXPERTS\nzenhomeexperts.com";
-
-    // Build URL exactly as per the API format provided
-    $url = "http://tra.bulksmshyderabad.co.in/websms/sendsms.aspx"
-        . "?userid=" . $user_id
-        . "&password=" . $pwd
-        . "&sender=" . $sender
-        . "&mobileno=" . urlencode($mobile)
-        . "&msg=" . urlencode($message)
-        . "&peid=" . $peid
-        . "&tpid=" . $tpid;
-
-    // Send via PHP CURL (as per sample code)
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_HEADER, 0);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // Return response as string
-    $output = curl_exec($ch);
-
-    // Capture any CURL error
-    if (curl_errno($ch)) {
-        $error = curl_error($ch);
-        curl_close($ch);
-        return ['success' => false, 'error' => 'CURL error: ' . $error];
+    $enabled = strtolower(sms_sender_env('SMS_OTP_ENABLED', 'true'));
+    if (in_array($enabled, ['0', 'false', 'no', 'off'], true)) {
+        return ['success' => false, 'error' => 'OTP SMS sending is disabled (SMS_OTP_ENABLED=false).'];
     }
 
+    $config = [
+        'url'      => sms_sender_env('SMS_GATEWAY_URL', 'http://tra.bulksmshyderabad.co.in/websms/sendsms.aspx'),
+        'user'     => sms_sender_env('SMS_GATEWAY_USER'),
+        'password' => sms_sender_env('SMS_GATEWAY_PASSWORD'),
+        'sender'   => sms_sender_env('SMS_GATEWAY_SENDER'),
+        'peid'     => sms_sender_env('SMS_GATEWAY_PEID'),
+        'tpid'     => sms_sender_env('SMS_OTP_TEMPLATE_ID'),
+    ];
+    foreach ($config as $key => $value) {
+        if ($value === '') {
+            error_log('[ZenHomeExperts SMS] OTP not sent: SMS gateway setting "' . $key . '" is missing in .env.');
+            return ['success' => false, 'error' => 'SMS gateway is not configured.'];
+        }
+    }
+
+    // The DLT-registered OTP template text: do not change without re-approval.
+    $message = "Your OTP is $otp for $purpose.\nPlease do not share this code with anyone.\n- ZEN HOME EXPERTS\nzenhomeexperts.com";
+
+    $url = $config['url'] . (strpos($config['url'], '?') === false ? '?' : '&') . http_build_query([
+        'userid'   => $config['user'],
+        'password' => $config['password'],
+        'sender'   => $config['sender'],
+        'mobileno' => $mobile,
+        'msg'      => $message,
+        'peid'     => $config['peid'],
+        'tpid'     => $config['tpid'],
+    ]);
+
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HEADER         => false,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT        => 10,
+    ]);
+    $output = curl_exec($ch);
+    $curlError = curl_errno($ch) ? curl_error($ch) : '';
+    $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
-    return ['success' => true, 'response' => $output];
+    $body = trim((string) $output);
+    if ($curlError !== '') {
+        error_log('[ZenHomeExperts SMS] OTP gateway error: ' . $curlError);
+        return ['success' => false, 'error' => 'SMS gateway unreachable.'];
+    }
+    if ($http >= 400 || $body === '' || preg_match('/\b(error|invalid|fail(ed|ure)?|denied|insufficient|unauthori[sz]ed)\b/i', $body)) {
+        error_log('[ZenHomeExperts SMS] OTP rejected by gateway (HTTP ' . $http . '): ' . mb_substr($body, 0, 300));
+        return ['success' => false, 'error' => 'SMS gateway rejected the message.'];
+    }
+    return ['success' => true, 'error' => ''];
 }

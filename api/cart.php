@@ -89,10 +89,28 @@ if ($method === 'GET') {
 }
 
 // POST: set cart items (add/update cart). Body: { "items": [ ... ] }
+// "items": [] empties the cart; a missing/invalid body is rejected (422) so
+// a broken request never wipes the saved cart.
 if ($method === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
-    $items = isset($input['items']) && is_array($input['items']) ? $input['items'] : [];
-    $jsonItems = json_encode($items);
+    $items = is_array($input) && array_key_exists('items', $input) ? $input['items'] : null;
+    if (!is_array($items) || !array_is_list($items) || count($items) > 100
+        || array_filter($items, fn($item) => !is_array($item))) {
+        http_response_code(422);
+        echo json_encode([
+            "statusCode" => 422,
+            "status" => "error",
+            "message" => "Send items as a list of cart items (at most 100).",
+            "errors" => ["items" => "Must be a list of objects."],
+        ]);
+        exit;
+    }
+    $jsonItems = json_encode($items, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if ($jsonItems === false || strlen($jsonItems) > 60000) {
+        http_response_code(422);
+        echo json_encode(["statusCode" => 422, "status" => "error", "message" => "Cart is too large.", "errors" => ["items" => "Too large."]]);
+        exit;
+    }
     $stmt = $conn->prepare("
         INSERT INTO cart (user_id, items) VALUES (?, ?)
         ON DUPLICATE KEY UPDATE items = VALUES(items), updated_at = CURRENT_TIMESTAMP

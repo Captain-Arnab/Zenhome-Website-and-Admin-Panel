@@ -51,6 +51,7 @@ function db(): PDO
     if ($pdo instanceof PDO) {
         return $pdo;
     }
+    $zcDbSoftFail = true;
     ob_start();
     require ZC_ROOT . '/api/db.php';
     $output = trim(ob_get_clean());

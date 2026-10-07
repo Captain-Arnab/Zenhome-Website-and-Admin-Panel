@@ -154,8 +154,13 @@ function catalog_services(PDO $pdo, array $filters = [], int $limit = 100, int $
         $params[] = (int) $filters['subcategory_id'];
     }
     if (!empty($filters['slug'])) {
-        $where[] = 'g.slug = ?';
-        $params[] = (string) $filters['slug'];
+        if (preg_match('/^service-(\d+)$/', (string) $filters['slug'], $m)) {
+            $where[] = '(g.slug = ? OR g.id = ?)';
+            array_push($params, (string) $filters['slug'], (int) $m[1]);
+        } else {
+            $where[] = 'g.slug = ?';
+            $params[] = (string) $filters['slug'];
+        }
     }
     if (isset($filters['ids']) || isset($filters['slugs'])) {
         // Services without a slug are listed as "service-<id>".
@@ -183,14 +188,19 @@ function catalog_services(PDO $pdo, array $filters = [], int $limit = 100, int $
         }
         $where[] = '(' . implode(' OR ', $any) . ')';
     }
-    $from = '(SELECT MIN(sp.packId) AS id, sp.category_Id AS category_id, sp.subcategory AS name,
-                MAX(sp.price) AS price, MAX(sp.mrp) AS mrp, MAX(sp.serviceTime) AS duration, MAX(sp.image) AS image,
-                MAX(sp.status) AS status, MAX(sp.subcategory_id) AS subcategory_id, MAX(sp.whyChooseThisPack) AS description,
+    // A group is booked by its first pack (MIN packId, see pack_id below), so
+    // price, mrp and status come from that row: the listed price is what
+    // book_appointment charges, and a disabled first pack hides the group.
+    $from = '(SELECT a.*, f.price, f.mrp, f.status
+            FROM (SELECT MIN(sp.packId) AS id, sp.category_Id AS category_id, sp.subcategory AS name,
+                MAX(sp.serviceTime) AS duration, MAX(sp.image) AS image,
+                MAX(sp.subcategory_id) AS subcategory_id, MAX(sp.whyChooseThisPack) AS description,
                 MAX(sp.idealFor) AS ideal_for, MAX(sp.slug) AS slug, MAX(sp.web_tag) AS tag, MAX(sp.highlights) AS highlights,
                 MAX(sp.sort_order) AS sort_order,
                 GROUP_CONCAT(REPLACE(REPLACE(sp.whatsIncluded, CHAR(13), \' \'), CHAR(10), \' \') ORDER BY sp.packId SEPARATOR \'\n\') AS included
             FROM saverpacks sp
-            GROUP BY sp.category_Id, sp.subcategory) g
+            GROUP BY sp.category_Id, sp.subcategory) a
+            JOIN saverpacks f ON f.packId = a.id) g
         JOIN service_category c ON c.CATEGORY_ID = g.category_id AND c.status = 1
         LEFT JOIN service_subcategories s ON s.id = g.subcategory_id';
     $sqlWhere = implode(' AND ', $where);

@@ -26,6 +26,7 @@ function legacy_db(): ?PDO
     static $pdo = false;
     if ($pdo === false) {
         $pdo = null;
+        $zcDbSoftFail = true;
         ob_start();
         try {
             include __DIR__ . '/db.php';

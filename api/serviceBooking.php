@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/public_helper.php';
+public_cors('POST, OPTIONS');
 include 'db.php';
 require_once __DIR__ . '/legacy_access.php';
 $legacy = legacy_access('serviceBooking');
@@ -60,8 +62,9 @@ try {
     $stmt->execute([$category, $subcategories_json, $date, $location, $landmark, $user_id, 
                     $status, $service_slot, $created_at, $price, $technician_name]);
 } catch (PDOException $e) {
+    error_log('[serviceBooking] ' . $e->getMessage());
     http_response_code(500); // Internal Server Error
-    echo json_encode(["status" => "error", "message" => "Database error: " . $e->getMessage()]);
+    echo json_encode(["statusCode" => 500, "status" => "error", "message" => "Server error. Please try again."]);
     exit;
 }
 

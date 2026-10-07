@@ -1,5 +1,6 @@
 <?php
-header('Content-Type: application/json');
+require_once __DIR__ . '/public_helper.php';
+public_cors('GET, OPTIONS');
 require_once __DIR__ . '/legacy_access.php';
 $legacy = legacy_access('user_orders');
 legacy_require_user($legacy, $_GET['user_id'] ?? null);
@@ -30,8 +31,8 @@ try {
     }
 
     // Pagination parameters
-    $page = max(1, $_GET['page'] ?? 1);
-    $limit = min(50, $_GET['limit'] ?? 10);
+    $page = max(1, (int) ($_GET['page'] ?? 1));
+    $limit = max(1, min(50, (int) ($_GET['limit'] ?? 10)));
     $offset = ($page - 1) * $limit;
 
     // Build base query
@@ -95,12 +96,8 @@ try {
         ]
     ]);
 
-} catch (Exception $e) {
-    http_response_code(400);
-    echo json_encode([
-        'success' => false,
-        'error' => $e->getMessage()
-    ]);
+} catch (Throwable $e) {
+    public_legacy_error($e, 'user_orders');
 } finally {
     $db->close();
 }

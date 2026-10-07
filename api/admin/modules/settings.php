@@ -86,6 +86,7 @@ function settings_save(array $in, ?array $admin): array
             'textarea'    => $v->str($key, $label, ['max' => 600, 'default' => '']),
             'bool'        => $v->bool($key) ? '1' : '0',
             'mobile_list' => settings_mobile_list($v, $key, $label),
+            'version'     => $v->str($key, $label, ['max' => 20, 'default' => '', 'pattern' => '/^(\d{1,4}(\.\d{1,4}){0,3})?$/', 'pattern_message' => 'Use a version number like 1.2.0']),
             default       => $v->str($key, $label, ['max' => 150, 'default' => '']),
         };
     }

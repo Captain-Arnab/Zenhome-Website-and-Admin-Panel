@@ -1,0 +1,147 @@
+Zen Home Experts - API inventory summary
+Generated 2026-10-07 by static code reading (no endpoint was called). Source data: docs/api_inventory.csv / .json
+Rows = endpoint/action pairs (admin modules: one row per ?action=; method-split files: one row per method mode).
+
+1. ENDPOINT COUNT PER GROUP
+   Customer App/Website        20
+   Admin Panel                120
+   Public Content              10
+   Payments & Webhooks          5
+   Legacy (old app/admin)      25
+   Cron/Internal                6
+   TOTAL                      186
+   Admin module actions found in route tables: 118 (all present as rows).
+
+2. LEGACY ENDPOINTS AND LEGACY_STRICT_AUTH BEHAVIOUR
+   LEGACY_STRICT_AUTH (api/legacy_access.php) applies to the legacy customer-app endpoints. Default false: no auth, every call
+   is only logged to legacy_access_log. true: valid customer Bearer token required (401), user_id must be the caller (403),
+   rows of other customers answer 404. Legacy admin endpoints (api/admin/*.php) ignore the flag: they always require an admin
+   session (+CSRF on non-GET), admin Bearer token or Admin-Token header (= ADMIN_SECRET), via api/admin/core/legacy_guard.php.
+   - api/admin/login.php: flag not used; public admin login issuing a 30-day admin Bearer token (no lockout).
+   - api/admin/assignTechnician.php: auth: Admin session or Admin Bearer or Admin-Token header
+   - api/admin/confirm_bookings.php: auth: Admin session or Admin Bearer or Admin-Token header
+   - api/admin/fetch_bookings.php: auth: Admin session or Admin Bearer or Admin-Token header
+   - api/admin/manageTimeSlot.php: auth: Admin session or Admin Bearer or Admin-Token header
+   - api/book_appointment.php: strict=true: customer token (401) + body user_id must be caller (403). strict=false: anyone can book for any user_id.
+   - api/checkSlot.php: strict=true: customer token only (401), no ownership check. strict=false: open.
+   - api/serviceBooking.php: strict=true: token (401) + body user_id must be caller (403). strict=false: open.
+   - api/serviceComplete.php: strict=true: token (401) + user_id must be caller (403) + booking id must belong to caller, missing allowed (404). strict=false: anyone can complete any booking.
+   - api/admin/addService.php: auth: Admin session or Admin Bearer or Admin-Token header
+   - api/admin/priceService.php: auth: Admin session or Admin Bearer or Admin-Token header
+   - api/admin/removeService.php: auth: Admin session or Admin Bearer or Admin-Token header
+   - api/fetchCategory.php: strict=true: customer token only (401). strict=false: open.
+   - api/admin/deactivate_user.php: auth: Admin session or Admin Bearer or Admin-Token header
+   - api/admin/fetch_users.php: auth: Admin session or Admin Bearer or Admin-Token header
+   - api/admin/remove_user.php: auth: Admin session or Admin Bearer or Admin-Token header
+   - api/admin/orders.php: auth: Admin session or Admin Bearer or Admin-Token header
+   - api/order_details.php: strict=true: token (401) + order_id row must belong to caller, missing row allowed (404). strict=false: any order readable.
+   - api/user_orders.php: strict=true: token (401) + GET user_id must be caller (403). strict=false: any user's orders readable.
+   - api/admin/payments.php: flag not used; legacy mode (no action) requires Admin-Token header = ADMIN_SECRET only.
+   - api/fetch-transaction.php: strict=true: token (401) + transaction_id must exist and belong to caller (404). strict=false: any transaction readable.
+   - api/payementInitiate.php: strict=true: token (401) + body user_id must be caller (403). strict=false: payment can be initiated for any user_id.
+   - api/paymentConfirmation.php: strict=true: token (401) + transactionId must exist and belong to caller (404). strict=false: any transaction status readable.
+   - api/save_transaction.php: strict=true: token (401) + user_id must be caller (403) + transaction must belong to caller, missing allowed (404). Status can still be set to success without PhonePe check. strict=false: anyone can write any transaction.
+   - api/user_transaction.php: strict=true: token (401) + user_id (body or GET) must be caller (403). strict=false: any user's transactions readable.
+
+3. ENDPOINTS WITH NO AUTHENTICATION (auth_required starts with "None"; CLI scripts listed separately)
+   - api/login.php [GET, POST] 
+   - api/logout.php [GET, POST] - None (Customer Bearer token optional; without it just returns success)
+   - api/password_reset.php?action=request [POST] 
+   - api/password_reset.php?action=reset [POST] 
+   - api/register.php [GET, POST] 
+   - api/validate_coupon.php [POST] - None (Customer Bearer token optional)
+   - api/contact_enquiry.php [POST] - None (Customer Bearer token optional)
+   - api/partner_registration.php [POST] 
+   - save_service_partner.php [POST] 
+   - api/rating.php [POST] - None (Customer Bearer token optional; if sent it must match user_id)
+   - admin/login.php [GET, POST] 
+   - api/admin/auth.php?action=login [POST] 
+   - api/banners.php [GET] 
+   - api/catalog_categories.php [GET] 
+   - api/catalog_services.php [GET] 
+   - api/catalog_subcategories.php [GET] 
+   - api/category.php [GET, POST] 
+   - api/fetchCategoryDetails.php [GET] 
+   - api/cms_pages.php [GET] 
+   - api/fetch_serviceable_areas.php [GET] 
+   - api/home_packages.php [GET] 
+   - api/site_settings.php [GET] 
+   - api/payment_callback.php [GET] 
+   - api/payment_verify.php [GET, POST] 
+   - api/admin/login.php [POST] 
+   - api/book_appointment.php [POST] - None (Customer Bearer token when LEGACY_STRICT_AUTH=true)
+   - api/checkSlot.php [POST] - None (Customer Bearer token when LEGACY_STRICT_AUTH=true)
+   - api/serviceBooking.php [POST] - None (Customer Bearer token when LEGACY_STRICT_AUTH=true)
+   - api/serviceComplete.php [POST] - None (Customer Bearer token when LEGACY_STRICT_AUTH=true)
+   - api/fetchCategory.php [GET] - None (Customer Bearer token when LEGACY_STRICT_AUTH=true)
+   - api/order_details.php [GET] - None (Customer Bearer token when LEGACY_STRICT_AUTH=true)
+   - api/user_orders.php [GET] - None (Customer Bearer token when LEGACY_STRICT_AUTH=true)
+   - api/fetch-transaction.php [GET, POST] - None (Customer Bearer token when LEGACY_STRICT_AUTH=true)
+   - api/payementInitiate.php [POST] - None (Customer Bearer token when LEGACY_STRICT_AUTH=true)
+   - api/paymentConfirmation.php [GET, POST] - None (Customer Bearer token when LEGACY_STRICT_AUTH=true)
+   - api/save_transaction.php [POST] - None (Customer Bearer token when LEGACY_STRICT_AUTH=true)
+   - api/user_transaction.php [GET, POST] - None (Customer Bearer token when LEGACY_STRICT_AUTH=true)
+   CLI only (web-blocked by .htaccess, no auth needed): database/admin_password.php, database/seed_catalog_from_website.php, database/seed_site_content.php, database/check_table_names.php, database/migrate.php, cron/send_scheduled.php
+
+4. ENDPOINTS THAT SEND SMS / PUSH (or email)
+   - api/login.php: SMS
+   - api/password_reset.php?action=request: SMS
+   - api/admin/bookings.php?action=assign: SMS, Push
+   - api/admin/bookings.php?action=cancel: SMS, Push
+   - api/admin/bookings.php?action=update_status: SMS, Push
+   - api/admin/notifications.php?action=send: SMS, Push, Email
+   - api/admin/sms.php?action=send_promo: SMS
+   - api/admin/sms.php?action=send_test: SMS
+   - api/admin/tickets.php?action=reply: Push
+   - api/payment_webhook.php: SMS
+   - api/admin/assignTechnician.php: SMS
+   - api/book_appointment.php: SMS
+   - api/paymentConfirmation.php: SMS
+   - cron/send_scheduled.php: SMS
+
+5. ENV KEYS EACH GROUP DEPENDS ON (names only)
+   Customer App/Website: APP_DEBUG, APP_LOG_DIR, APP_TIMEZONE, APP_URL, DB_HOST, DB_NAME, DB_PASSWORD, DB_USER, REVIEWS_AUTO_APPROVE
+   Admin Panel: APP_DEBUG, APP_LOG_DIR, APP_TIMEZONE, APP_URL, DB_HOST, DB_NAME, DB_PASSWORD, DB_USER, SMS_ENABLED, SMS_GATEWAY_PASSWORD, SMS_GATEWAY_PEID, SMS_GATEWAY_SENDER, SMS_GATEWAY_URL, SMS_GATEWAY_USER
+   Public Content: APP_DEBUG, APP_LOG_DIR, APP_TIMEZONE, APP_URL, DB_HOST, DB_NAME, DB_PASSWORD, DB_USER
+   Payments & Webhooks: ADMIN_SECRET, APP_DEBUG, APP_LOG_DIR, APP_TIMEZONE, APP_URL, DB_HOST, DB_NAME, DB_PASSWORD, DB_USER, PAYMENT_CALLBACK_BASE_URL, PHONEPE_CLIENT_ID, PHONEPE_CLIENT_SECRET, PHONEPE_CLIENT_VERSION, PHONEPE_ENV, PHONEPE_REDIRECT_URL, PHONEPE_WEBHOOK_PASSWORD, PHONEPE_WEBHOOK_USERNAME, SMS_ENABLED, SMS_GATEWAY_PASSWORD, SMS_GATEWAY_PEID, SMS_GATEWAY_SENDER, SMS_GATEWAY_URL, SMS_GATEWAY_USER
+   Legacy (old app/admin): ADMIN_SECRET, APP_DEBUG, APP_LOG_DIR, APP_TIMEZONE, APP_URL, DB_HOST, DB_NAME, DB_PASSWORD, DB_USER, LEGACY_ASSIGN_STRICT, LEGACY_STRICT_AUTH, PHONEPE_CLIENT_ID, PHONEPE_CLIENT_SECRET, PHONEPE_CLIENT_VERSION, PHONEPE_ENV, PHONEPE_REDIRECT_URL, RECEIPT_BASE_URL, SMS_ENABLED, SMS_GATEWAY_PASSWORD, SMS_GATEWAY_PEID, SMS_GATEWAY_SENDER, SMS_GATEWAY_URL, SMS_GATEWAY_USER
+   Cron/Internal: APP_DEBUG, APP_LOG_DIR, APP_TIMEZONE, APP_URL, DB_HOST, DB_NAME, DB_PASSWORD, DB_USER, SMS_ENABLED, SMS_GATEWAY_PASSWORD, SMS_GATEWAY_PEID, SMS_GATEWAY_SENDER, SMS_GATEWAY_URL, SMS_GATEWAY_USER
+
+6. NEEDS REVIEW / BROKEN / INSECURE / OTHER NOTED ISSUES (see Status column for all notes)
+   - #2 api/update_profile.php: Active - note: no method check (any method with a JSON body works); phone/email can be changed without OTP/email verification; no caller found in website JS
+   - #4 api/login.php: Active - insecure: no rate limit on password attempts or OTP sends (SMS bombing), unlimited OTP guesses within the 5-min window, OTP from rand() stored in plaintext; no method check (reads JSON body on any method); SMS gateway credentials hardcoded in api/sms_sender.php and sent over plain HTTP
+   - #5 api/logout.php: Active - note: wipes the customer's persisted cart on logout; no method check (token also accepted via ?token= on GET)
+   - #8 api/register.php: Active - insecure: no rate limit, no phone/email verification, no password strength rule, email format not validated; no method check
+   - #10 api/cart.php: Active - note: POST stores any client-supplied JSON items without validation (prices are re-checked at booking)
+   - #11 api/validate_coupon.php: Active - note: unauthenticated user_id param lets anyone check whether a given customer already used a coupon; no rate limit (coupon codes can be brute-forced)
+   - #12 api/contact_enquiry.php: Active - bug: when a customer token is sent, (int) cast of the auth array stores user_id = 1 for every logged-in enquiry, so customer #1 sees other people's enquiries (name, phone, email, address) via api/support_tickets.php
+   - #14 api/partner_registration.php: Active - insecure: no auth, rate limit, duplicate-mobile check or field validation; unlimited base64 uploads of KYC docs (Aadhaar, PAN, cheque) stored under web-served api/uploads/partners (scripts blocked, but files downloadable by URL); 500 response leaks the PDO error message; needs migration 2026_10_03_006 (final_consent column) per DEPLOY.md; client per code comment is Flutter Web/Android
+   - #15 save_service_partner.php: Legacy - duplicates api/partner_registration.php (same service_partners table, older field names, no file uploads, but validated/rate-limited); no caller found in repo; Aadhaar/PAN/bank numbers stored in plaintext (only columns that exist are written, existence of aadhaar_number/pan_number columns unknown)
+   - #16 api/rating.php: Active - insecure: without a token anyone can post/overwrite a review as any user_id for that user's booking (and for bookings with NULL user_id); no method check, no CORS headers
+   - #20 api/support_tickets.php?action=reply: Active - note: no per-day limit on replies
+   - #145 api/category.php: Active - note: public include_disabled=1 exposes disabled categories; 500 response leaks the exception message; no method check
+   - #146 api/fetchCategoryDetails.php: Legacy - no caller found in repo; returns all columns including disabled packs, errors sent with HTTP 200 (message 'User not found.'), DB error text leaked in response, no CORS/Content-Type header
+   - #148 api/fetch_serviceable_areas.php: Active - note: public include_disabled=1 exposes disabled areas; DB errors are uncaught (500); no method check
+   - #152 api/payment_verify.php: Active - insecure: no auth, returns PhonePe state, amount and payment details for any order id; transactionId alias accepted; no repo caller found
+   - #156 api/admin/login.php: Legacy - insecure: no failed-login counting, lockout or rate limit (ignores locked_until), so it bypasses the lockout of the admin panel login; all failures return HTTP 200 with only a message
+   - #157 api/admin/assignTechnician.php: Legacy - insecure in default mode (LEGACY_ASSIGN_STRICT=false): updates ALL of the customer's bookings with one new booking id and returns the OTP in the response message (test mode hard-coded, no SMS); strict mode assigns one booking, needs bookingId or uniqueBookingId, and sends the OTP by SMS via api/sms_sender.php, which has the gateway credentials hard-coded rather than in .env; DB error text is echoed in the default mode
+   - #161 api/book_appointment.php: Legacy - insecure when LEGACY_STRICT_AUTH=false: anyone can create bookings and redeem coupons for any user_id without login (a token, if sent, must match user_id -> 403); missing fields return HTTP 200 with status error; still the live website booking endpoint
+   - #162 api/checkSlot.php: Legacy - when LEGACY_STRICT_AUTH=false exposes only which slots are booked per date (low risk); a slot booked by anyone blocks it for everyone; DB error text leaked in 500
+   - #163 api/serviceBooking.php: Legacy - insecure when LEGACY_STRICT_AUTH=false: anyone can create bookings for any user_id; client controls status, price and technician even in strict mode; DB error text leaked in 500
+   - #164 api/serviceComplete.php: Legacy - insecure when LEGACY_STRICT_AUTH=false: anyone knowing user_id + booking id can try OTPs with no attempt limit to complete any booking; DB error text leaked in 500
+   - #165 api/admin/addService.php: Legacy - likely broken: saves the image to a hard-coded old-host path (/home/vsnl/public_html/servicy/assets/services/), so it most likely fails with 'Failed to save image' on this server; validation and save failures return HTTP 200 with status:error
+   - #166 api/admin/priceService.php: Broken - reads/writes service_category.subcategories, but service_category has no subcategories column (schema dump; subcategories now live in saverpacks/service_subcategories), so it always fails with 500 and echoes the DB error
+   - #168 api/fetchCategory.php: Legacy - returns only the first matching row; errors come back as HTTP 200 with status error ('User not found', DB error text leaked); no JSON Content-Type header; exposes only public catalog data when LEGACY_STRICT_AUTH=false
+   - #171 api/admin/remove_user.php: Legacy - partly broken: ends with $conn->close() on a PDO object (fatal error after the JSON is sent); deleting a customer who has bookings violates FK fk_user_id (service_booking.user_id -> users.ID) and fails with an uncaught 500
+   - #172 api/admin/orders.php: Broken - SELECTs o.service_details, but the orders table has no service_details column (schema dump; no migration adds it), so the query fails and every request returns 400 with the SQL error; current transaction ids also do not use the TXN_ format the regex requires
+   - #173 api/order_details.php: Legacy - insecure when LEGACY_STRICT_AUTH=false: anyone can read any TXN_ order's user_id, items, shipping address and PhonePe payment data; website 'ZC-' orders are rejected by the id format check
+   - #174 api/user_orders.php: Legacy - insecure when LEGACY_STRICT_AUTH=false: anyone can list any user's orders including items and shipping addresses; limit=0 causes division-by-zero 500
+   - #175 api/admin/payments.php: Broken - the legacy path only requires vendor/autoload.php and never loads .env (no Dotenv call), so $_ENV['ADMIN_SECRET'] and $_ENV['DB_*'] are empty unless set as real server environment variables, and every request then gets 401
+   - #176 api/fetch-transaction.php: Legacy - insecure when LEGACY_STRICT_AUTH=false: anyone can read status, amount, payment mode and the full raw PhonePe response for any transaction id
+   - #177 api/payementInitiate.php: Legacy - insecure when LEGACY_STRICT_AUTH=false: anyone can create PhonePe orders for any amount and insert pending transactions under any user_id (or GUEST_nnnn); amount is always client-supplied
+   - #178 api/paymentConfirmation.php: Legacy - insecure when LEGACY_STRICT_AUTH=false: anyone with a transaction id can read its PhonePe state, amount and payment details and trigger the status sync (state itself comes from PhonePe); missing id and gateway errors return HTTP 200 with success=false
+   - #179 api/save_transaction.php: Legacy - insecure: client sets any transaction status (incl. success) with no PhonePe verification, even in strict mode for own rows; when LEGACY_STRICT_AUTH=false anyone can create or overwrite any transaction; 'refunded' is not in the transactions.status enum
+   - #180 api/user_transaction.php: Legacy - insecure when LEGACY_STRICT_AUTH=false: anyone can list any user's transactions (ids, amounts, statuses, payment modes)
+
+7. COUNT CHECK
+   CSV data rows: 186 | JSON objects: 186 | endpoint/action pairs found: 186

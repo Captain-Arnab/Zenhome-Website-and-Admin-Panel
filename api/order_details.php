@@ -1,5 +1,6 @@
 <?php
-header('Content-Type: application/json');
+require_once __DIR__ . '/public_helper.php';
+public_cors('GET, OPTIONS');
 require_once __DIR__ . '/legacy_access.php';
 $legacy = legacy_access('order_details');
 legacy_require_owner($legacy, 'SELECT user_id FROM transactions WHERE transaction_id = ?', [is_string($_GET['order_id'] ?? null) ? $_GET['order_id'] : ''], 'Order');
@@ -97,12 +98,8 @@ try {
         'data' => $response
     ]);
 
-} catch (Exception $e) {
-    http_response_code(400);
-    echo json_encode([
-        'success' => false,
-        'error' => $e->getMessage()
-    ]);
+} catch (Throwable $e) {
+    public_legacy_error($e, 'order_details');
 } finally {
     $db->close();
 }

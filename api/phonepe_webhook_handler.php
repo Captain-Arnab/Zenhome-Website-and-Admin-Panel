@@ -5,9 +5,10 @@
  * with a stub verifier and a disposable transaction row - no real PhonePe
  * API call, no real SMS, no network access.
  *
- * Same state mapping as api/paymentConfirmation.php (the working v2 status
- * flow): SUCCESS/COMPLETED -> success, FAILED -> failed, else -> pending.
+ * State mapping and the "success is final" rule live in api/payment_helper.php
+ * (shared with paymentConfirmation.php and payment_callback.php).
  */
+require_once __DIR__ . '/payment_helper.php';
 
 /**
  * @param array<string,string> $headers   Lowercase header name => value. Only 'authorization' is read.
@@ -32,40 +33,32 @@ function phonepe_handle_webhook(array $headers, string $body, PDO $conn, callabl
 
     $payload = $callback->getPayload();
     $merchantOrderId = (string) ($payload->getMerchantOrderId() ?? '');
-    $rawState = strtoupper((string) ($payload->getState() ?? ''));
-    $newStatus = match ($rawState) {
-        'SUCCESS', 'COMPLETED' => 'success',
-        'FAILED' => 'failed',
-        default => 'pending',
-    };
+    $newStatus = zc_phonepe_status($payload->getState());
 
     if ($merchantOrderId === '') {
         return ['http' => 200, 'result' => ['status' => 'ignored', 'message' => 'Callback had no merchantOrderId.']];
     }
 
-    $stmt = $conn->prepare('SELECT transaction_id, user_id, status FROM transactions WHERE transaction_id = ?');
-    $stmt->execute([$merchantOrderId]);
-    $txn = $stmt->fetch(PDO::FETCH_ASSOC);
+    $t = zc_txn_transition($conn, $merchantOrderId, $newStatus);
 
-    if (!$txn) {
+    if (!$t['found']) {
         // Nothing to update; acknowledge so PhonePe does not keep retrying an order we don't have.
         return ['http' => 200, 'result' => ['status' => 'unknown_order', 'transaction_id' => $merchantOrderId]];
     }
 
-    if ($txn['status'] === $newStatus) {
+    if ($t['previous'] === $newStatus) {
         // Same callback delivered again (or the status check already applied it): no-op, not an error.
         return ['http' => 200, 'result' => ['status' => 'duplicate', 'transaction_id' => $merchantOrderId, 'current_status' => $newStatus]];
     }
 
-    $conn->prepare('UPDATE transactions SET status = ? WHERE transaction_id = ?')->execute([$newStatus, $merchantOrderId]);
-    if ($newStatus === 'success') {
-        $conn->prepare('DELETE FROM cart WHERE user_id = ?')->execute([(int) $txn['user_id']]);
-        try {
-            $notify($merchantOrderId);
-        } catch (Throwable $e) {
-            error_log('[payment_webhook] notify failed for ' . $merchantOrderId . ': ' . $e->getMessage());
-        }
+    if (!$t['changed']) {
+        // success/refunded are final: a late failed/pending event never undoes a payment.
+        return ['http' => 200, 'result' => ['status' => 'ignored_final', 'transaction_id' => $merchantOrderId, 'current_status' => $t['current'], 'reported_status' => $newStatus]];
     }
 
-    return ['http' => 200, 'result' => ['status' => 'ok', 'transaction_id' => $merchantOrderId, 'applied_status' => $newStatus, 'previous_status' => $txn['status']]];
+    if ($t['became_success']) {
+        zc_payment_success_effects($conn, $merchantOrderId, $t['user_id'], $notify);
+    }
+
+    return ['http' => 200, 'result' => ['status' => 'ok', 'transaction_id' => $merchantOrderId, 'applied_status' => $newStatus, 'previous_status' => $t['previous']]];
 }

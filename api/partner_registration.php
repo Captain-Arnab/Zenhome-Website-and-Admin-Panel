@@ -173,7 +173,7 @@ try {
     $partnerId = (int) $conn->lastInsertId();
     http_response_code(201);
     echo json_encode([
-        'statusCode' => 200,
+        'statusCode' => 201,
         'status' => 'success',
         'message' => 'Partner registration submitted successfully.',
         'partner_id' => $partnerId,
@@ -183,7 +183,7 @@ try {
     echo json_encode([
         'statusCode' => 500,
         'status' => 'error',
-        'message' => 'Registration failed.',
-        'error' => $e->getMessage(),
+        'message' => 'Registration failed. Please try again.',
     ]);
+    error_log('[partner_registration] ' . $e->getMessage());
 }

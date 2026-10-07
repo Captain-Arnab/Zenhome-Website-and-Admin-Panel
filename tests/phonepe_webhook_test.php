@@ -128,6 +128,20 @@ $res = phonepe_handle_webhook([], '{}', $conn, $verify, $stubNotify);
 check('unknown order: http 200 (acknowledged, nothing to update)', $res['http'] === 200);
 check('unknown order: status unknown_order', $res['result']['status'] === 'unknown_order');
 
+// --- Case 7: late FAILED after success (success is final) ---
+$txn = 'QA_TXN_FINAL_' . bin2hex(random_bytes(3));
+$conn->prepare("INSERT INTO transactions (transaction_id, user_id, amount, status, payment_mode) VALUES (?, ?, 100, 'success', 'PHONEPE')")->execute([$txn, $testUserId]);
+$notifyBefore = count($notifyCalls);
+$verify = fn($h, $b) => stub_callback($txn, 'FAILED');
+$res = phonepe_handle_webhook([], '{}', $conn, $verify, $stubNotify);
+check('late failed: http 200', $res['http'] === 200);
+check('late failed: status ignored_final', $res['result']['status'] === 'ignored_final');
+$row = $conn->prepare('SELECT status FROM transactions WHERE transaction_id = ?');
+$row->execute([$txn]);
+check('late failed: transaction still success', $row->fetchColumn() === 'success');
+check('late failed: notify not called', count($notifyCalls) === $notifyBefore);
+cleanup($conn, $txn, $testUserId);
+
 // Final safety net: remove anything left over from this test run.
 $conn->prepare("DELETE FROM transactions WHERE transaction_id LIKE 'QA_TXN_%'")->execute();
 $conn->prepare('DELETE FROM cart WHERE user_id = ?')->execute([$testUserId]);

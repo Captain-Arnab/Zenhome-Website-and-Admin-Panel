@@ -21,6 +21,7 @@ function site_content_db(): ?PDO
         return $pdo;
     }
     try {
+        $zcDbSoftFail = true;
         ob_start();
         require __DIR__ . '/db.php';
         ob_end_clean();

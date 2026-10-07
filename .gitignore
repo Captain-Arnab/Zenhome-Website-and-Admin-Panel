@@ -21,6 +21,7 @@
 !/uploads/.htaccess
 !/uploads/**/.htaccess
 /api/uploads/**
+!/api/uploads/**/
 !/api/uploads/.htaccess
 !/api/uploads/**/.htaccess
 /assets/services/**

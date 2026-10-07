@@ -18,10 +18,7 @@ public_require_method('POST');
 
 $in = public_input();
 $name = public_str($in, 'name');
-$phone = preg_replace('/\D+/', '', public_str($in, 'phone'));
-if (strlen($phone) === 12 && str_starts_with($phone, '91')) {
-    $phone = substr($phone, 2);
-}
+$phone = (string) zc_normalize_phone(public_str($in, 'phone'));
 $email = public_str($in, 'email');
 $service = public_str($in, 'service');
 $address = public_str($in, 'address');
@@ -60,8 +57,8 @@ $now = (new DateTime('now', new DateTimeZone($tz)))->format('Y-m-d H:i:s');
 $phoneLine = 'Phone: ' . $phone;
 
 try {
-    $userId = getUserIdFromRequest($conn);
-    $userId = $userId ? (int) $userId : null;
+    $auth = getUserIdFromRequest($conn);
+    $userId = $auth ? (int) $auth['user_id'] : null;
 
     $recent = $conn->prepare("SELECT COUNT(*) FROM support_tickets WHERE subject LIKE 'Website enquiry:%' AND message LIKE ? AND created_at >= ?");
     $recent->execute(['%' . $phoneLine . '%', date('Y-m-d H:i:s', strtotime($now . ' -1 day'))]);

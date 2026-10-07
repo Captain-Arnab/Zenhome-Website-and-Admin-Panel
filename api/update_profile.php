@@ -1,159 +1,113 @@
 <?php
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Auth-Token, X-Requested-With");
-    header("Access-Control-Allow-Methods: GET, POST, PUT, PATCH, OPTIONS");
-    http_response_code(200);
-    exit();
-}
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Auth-Token, X-Requested-With");
-header("Access-Control-Allow-Methods: GET, POST, PUT, PATCH, OPTIONS");
-header("Content-Type: application/json");
+/**
+ * Update the signed-in customer's profile. POST (PUT/PATCH kept for older
+ * app builds) with a JSON object of any of:
+ *   first_name, last_name, email, phone, address, photo,
+ *   password | new_password (+ current_password)
+ * first_name, email and phone cannot be blanked. A password change signs out
+ * every other session of this user (the current token stays valid).
+ * Returns the profile under `user` (and `data`).
+ */
+require __DIR__ . '/public_helper.php';
+require __DIR__ . '/auth_helper.php';
 
-include 'db.php';
-include 'auth_helper.php';
+public_cors('POST, PUT, PATCH, OPTIONS');
+public_require_method('POST', 'PUT', 'PATCH');
 
+$conn = public_db();
 $auth = requireAuth($conn);
 $user_id = $auth['user_id'];
 
-$data = json_decode(file_get_contents("php://input"), true);
+$data = json_decode(file_get_contents('php://input') ?: '', true);
 if (!is_array($data) || empty($data)) {
-    http_response_code(400);
-    echo json_encode([
-        "statusCode" => 400,
-        "status" => "error",
-        "message" => "No fields to update. Send at least one of: first_name, last_name, email, phone, address, photo, or password (with current_password).",
-    ]);
-    exit;
+    public_json(400, 'No fields to update. Send at least one of: first_name, last_name, email, phone, address, photo, or password (with current_password).');
 }
+unset($data['token']);
+
+$updates = [];
+$params = [];
 
 // Optional: password change (requires current_password + new password)
 if (isset($data['password']) || isset($data['new_password'])) {
     $current = $data['current_password'] ?? null;
     $new_pass = $data['password'] ?? $data['new_password'] ?? null;
-    if (empty($current) || empty($new_pass)) {
-        http_response_code(400);
-        echo json_encode([
-            "statusCode" => 400,
-            "status" => "error",
-            "message" => "To change password, send current_password and password (or new_password).",
-        ]);
-        exit;
+    if (empty($current) || empty($new_pass) || !is_string($current) || !is_string($new_pass)) {
+        public_json(400, 'To change password, send current_password and password (or new_password).');
     }
-    $stmt = $conn->prepare("SELECT password FROM users WHERE ID = ?");
+    if (strlen($new_pass) < 6 || strlen($new_pass) > 72) {
+        public_json(400, 'Password must be 6 to 72 characters.', null, ['password' => 'Password must be 6 to 72 characters.']);
+    }
+    $stmt = $conn->prepare('SELECT password FROM users WHERE ID = ?');
     $stmt->execute([$user_id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (!$row || !password_verify($current, $row['password'])) {
-        http_response_code(400);
-        echo json_encode([
-            "statusCode" => 400,
-            "status" => "error",
-            "message" => "Current password is incorrect.",
-        ]);
-        exit;
+    if (!$row || !password_verify($current, (string) $row['password'])) {
+        public_json(400, 'Current password is incorrect.', null, ['current_password' => 'Current password is incorrect.']);
     }
-    $data['_hashed_password'] = password_hash($new_pass, PASSWORD_DEFAULT);
+    $hashedPassword = password_hash($new_pass, PASSWORD_DEFAULT);
 }
 
-$allowed = ['first_name', 'last_name', 'email', 'phone', 'address', 'photo'];
-$updates = [];
-$params = [];
-
-foreach ($allowed as $field) {
+$required = ['first_name' => 'First name', 'email' => 'Email', 'phone' => 'Phone number'];
+foreach (['first_name', 'last_name', 'email', 'phone', 'address', 'photo'] as $field) {
     if (!array_key_exists($field, $data) || $data[$field] === null) {
         continue;
     }
-    $val = is_string($data[$field]) ? trim($data[$field]) : $data[$field];
-    if ($field === 'email' && $val !== '' && !filter_var($val, FILTER_VALIDATE_EMAIL)) {
-        http_response_code(400);
-        echo json_encode(["statusCode" => 400, "status" => "error", "message" => "Invalid email address."]);
-        exit;
+    if (!is_scalar($data[$field])) {
+        public_json(400, "Invalid value for {$field}.", null, [$field => 'Must be text.']);
     }
-    if ($field === 'phone' && $val !== '') {
-        $val = preg_replace('/[^0-9]/', '', (string) $val);
-        if (strlen($val) === 11 && $val[0] === '0') {
-            $val = substr($val, 1);
+    $val = trim((string) $data[$field]);
+    if ($val === '' && isset($required[$field])) {
+        public_json(400, "{$required[$field]} cannot be empty.", null, [$field => "{$required[$field]} cannot be empty."]);
+    }
+    if ($field === 'email') {
+        if (!filter_var($val, FILTER_VALIDATE_EMAIL)) {
+            public_json(400, 'Invalid email address.', null, ['email' => 'Invalid email address.']);
         }
-        if (strlen($val) === 12 && substr($val, 0, 2) === '91') {
-            $val = substr($val, 2);
+        $check = $conn->prepare('SELECT ID FROM users WHERE email = ? AND ID != ?');
+        $check->execute([$val, $user_id]);
+        if ($check->fetch()) {
+            public_json(400, 'This email is already registered.', null, ['email' => 'This email is already registered.']);
         }
-        if (strlen($val) !== 10) {
-            http_response_code(400);
-            echo json_encode(["statusCode" => 400, "status" => "error", "message" => "Invalid phone number."]);
-            exit;
+    }
+    if ($field === 'phone') {
+        $val = zc_normalize_phone($val);
+        if ($val === null) {
+            public_json(400, 'Invalid phone number.', null, ['phone' => 'Enter a valid 10-digit mobile number.']);
+        }
+        $check = $conn->prepare('SELECT ID FROM users WHERE phone = ? AND ID != ?');
+        $check->execute([$val, $user_id]);
+        if ($check->fetch()) {
+            public_json(400, 'This phone number is already registered.', null, ['phone' => 'This phone number is already registered.']);
         }
     }
     $updates[] = "`$field` = ?";
     $params[] = $val;
 }
 
-if (isset($data['_hashed_password'])) {
-    $updates[] = "`password` = ?";
-    $params[] = $data['_hashed_password'];
+if (isset($hashedPassword)) {
+    $updates[] = '`password` = ?';
+    $params[] = $hashedPassword;
 }
 
 if (empty($updates)) {
-    http_response_code(400);
-    echo json_encode([
-        "statusCode" => 400,
-        "status" => "error",
-        "message" => "No valid fields to update.",
-    ]);
-    exit;
-}
-
-// Uniqueness: if updating email or phone, ensure not taken by another user
-if (array_key_exists('email', $data) && trim($data['email']) !== '') {
-    $check = $conn->prepare("SELECT ID FROM users WHERE email = ? AND ID != ?");
-    $check->execute([trim($data['email']), $user_id]);
-    if ($check->fetch()) {
-        http_response_code(400);
-        echo json_encode(["statusCode" => 400, "status" => "error", "message" => "This email is already registered."]);
-        exit;
-    }
-}
-if (array_key_exists('phone', $data) && trim($data['phone']) !== '') {
-    $phone = preg_replace('/[^0-9]/', '', $data['phone']);
-    if (strlen($phone) === 11 && $phone[0] === '0') {
-        $phone = substr($phone, 1);
-    }
-    if (strlen($phone) === 12 && substr($phone, 0, 2) === '91') {
-        $phone = substr($phone, 2);
-    }
-    $check = $conn->prepare("SELECT ID FROM users WHERE phone = ? AND ID != ?");
-    $check->execute([$phone, $user_id]);
-    if ($check->fetch()) {
-        http_response_code(400);
-        echo json_encode(["statusCode" => 400, "status" => "error", "message" => "This phone number is already registered."]);
-        exit;
-    }
+    public_json(400, 'No valid fields to update.');
 }
 
 $params[] = $user_id;
-$sql = "UPDATE users SET " . implode(", ", $updates) . " WHERE ID = ?";
-$stmt = $conn->prepare($sql);
-$stmt->execute($params);
+$conn->prepare('UPDATE users SET ' . implode(', ', $updates) . ' WHERE ID = ?')->execute($params);
 
-// Return updated profile (same shape as fetch_user / login)
-$stmt = $conn->prepare("SELECT ID, first_name, last_name, email, phone, address, photo, status FROM users WHERE ID = ?");
+if (isset($hashedPassword)) {
+    $conn->prepare('DELETE FROM user_sessions WHERE user_id = ? AND token <> ?')->execute([$user_id, (string) getBearerToken()]);
+}
+
+$stmt = $conn->prepare('SELECT ID, first_name, last_name, email, phone, address, photo, status FROM users WHERE ID = ?');
 $stmt->execute([$user_id]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
+$profile = zc_user_profile($stmt->fetch(PDO::FETCH_ASSOC));
 
-$profile = [
-    "id" => (int) $user['ID'],
-    "first_name" => $user['first_name'],
-    "last_name" => $user['last_name'],
-    "email" => $user['email'],
-    "phone" => $user['phone'],
-    "address" => $user['address'],
-    "photo" => $user['photo'],
-    "status" => $user['status'],
-];
-
+http_response_code(200);
 echo json_encode([
-    "statusCode" => 200,
-    "status" => "success",
-    "message" => "Profile updated successfully.",
-    "user" => $profile,
-]);
+    'statusCode' => 200,
+    'status' => 'success',
+    'message' => 'Profile updated successfully.',
+    'user' => $profile,
+    'data' => $profile,
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

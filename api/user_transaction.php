@@ -1,5 +1,6 @@
 <?php
-header('Content-Type: application/json');
+require_once __DIR__ . '/public_helper.php';
+public_cors('GET, POST, OPTIONS');
 require_once __DIR__ . '/legacy_access.php';
 $legacy = legacy_access('user_transaction');
 $legacyInput = json_decode(file_get_contents('php://input'), true);
@@ -74,12 +75,8 @@ try {
         ]
     ]);
 
-} catch (Exception $e) {
-    http_response_code(400);
-    echo json_encode([
-        'success' => false,
-        'error' => $e->getMessage()
-    ]);
+} catch (Throwable $e) {
+    public_legacy_error($e, 'user_transaction');
 } finally {
     $db->close();
 }

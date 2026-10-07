@@ -1,32 +1,30 @@
 <?php
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Auth-Token, X-Requested-With");
-    header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-    http_response_code(200);
-    exit();
-}
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Auth-Token, X-Requested-With");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Content-Type: application/json");
+/**
+ * Sign out: POST with the session token. Deletes only this session; the
+ * saved cart is kept so it is still there at the next sign-in. Optional
+ * body `fcm_token` also unregisters that device from push (device_tokens).
+ * Always 200, even when the token was already invalid.
+ */
+require __DIR__ . '/public_helper.php';
+require __DIR__ . '/auth_helper.php';
 
-include 'db.php';
-include 'auth_helper.php';
+public_cors('POST, OPTIONS');
+public_require_method('POST');
 
+$conn = public_db();
 $token = getBearerToken();
 if ($token) {
-    $stmt = $conn->prepare("SELECT user_id FROM user_sessions WHERE token = ?");
-    $stmt->execute([$token]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    if ($row) {
-        $conn->prepare("DELETE FROM cart WHERE user_id = ?")->execute([$row['user_id']]);
+    $auth = getUserIdFromRequest($conn);
+    $body = json_decode(file_get_contents('php://input') ?: '', true);
+    $fcmToken = public_str(is_array($body) ? $body : $_POST, 'fcm_token');
+    if ($auth && $fcmToken !== '') {
+        try {
+            $conn->prepare('DELETE FROM device_tokens WHERE fcm_token = ? AND user_id = ?')->execute([$fcmToken, $auth['user_id']]);
+        } catch (Throwable $e) {
+            error_log('[ZenHomeExperts logout] device token cleanup failed: ' . $e->getMessage());
+        }
     }
     invalidateSession($conn, $token, null);
 }
 
-echo json_encode([
-    "statusCode" => 200,
-    "status" => "success",
-    "message" => "Logged out successfully."
-]);
+public_json(200, 'Logged out successfully.');

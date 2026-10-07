@@ -86,19 +86,112 @@ function getUserIdFromRequest($conn) {
     if (!$row) {
         return null;
     }
+    $row['ID'] = $row['user_id'];
     return [
         'user_id' => (int) $row['user_id'],
-        'user' => [
-            'id' => (int) $row['user_id'],
-            'first_name' => $row['first_name'],
-            'last_name' => $row['last_name'],
-            'email' => $row['email'],
-            'phone' => $row['phone'],
-            'address' => $row['address'],
-            'photo' => $row['photo'],
-            'status' => $row['status'],
-        ]
+        'user' => zc_user_profile($row),
     ];
+}
+
+/**
+ * The customer object every auth endpoint returns. `photo` stays the raw
+ * stored value (older app builds read it); `photo_url` is absolute or null.
+ */
+function zc_user_profile(array $row): array {
+    return [
+        'id' => (int) ($row['ID'] ?? $row['id'] ?? 0),
+        'first_name' => $row['first_name'] ?? null,
+        'last_name' => $row['last_name'] ?? null,
+        'email' => $row['email'] ?? null,
+        'phone' => $row['phone'] ?? null,
+        'address' => $row['address'] ?? null,
+        'photo' => $row['photo'] ?? null,
+        'photo_url' => zc_photo_url($row['photo'] ?? null),
+        'status' => $row['status'] ?? null,
+    ];
+}
+
+/**
+ * Indian mobile number normalised to 10 digits (drops +91 / leading 0), or
+ * null unless it matches ^[6-9]\d{9}$. The one phone rule for login,
+ * register, update_profile and password_reset.
+ */
+function zc_normalize_phone($raw): ?string {
+    if (!is_scalar($raw)) {
+        return null;
+    }
+    $digits = preg_replace('/\D/', '', (string) $raw);
+    if (strlen($digits) === 12 && strpos($digits, '91') === 0) {
+        $digits = substr($digits, 2);
+    } elseif (strlen($digits) === 11 && $digits[0] === '0') {
+        $digits = substr($digits, 1);
+    }
+    return preg_match('/^[6-9]\d{9}$/', $digits) ? $digits : null;
+}
+
+/**
+ * Absolute https URL of a stored profile photo (users.photo), or null.
+ * Accepts a full URL, a site-relative path or a bare legacy filename.
+ */
+function zc_photo_url($photo): ?string {
+    require_once __DIR__ . '/runtime.php';
+    $photo = trim((string) $photo);
+    if ($photo === '' || stripos($photo, 'data:') === 0) {
+        return null;
+    }
+    if (preg_match('#^https?://#i', $photo)) {
+        return $photo;
+    }
+    $root = dirname(__DIR__);
+    $photo = ltrim(str_replace('\\', '/', $photo), '/');
+    if (strpos($photo, '..') !== false) {
+        return null;
+    }
+    $candidates = strpos($photo, '/') !== false ? [$photo] : ['uploads/' . $photo, 'api/uploads/' . $photo, 'images/' . $photo];
+    foreach ($candidates as $path) {
+        if (is_file($root . '/' . $path)) {
+            return app_url($path);
+        }
+    }
+    return null;
+}
+
+/**
+ * Fixed-window counter in api_rate_limits. Returns false when $key already
+ * used $max hits in the current window. Fails open (and logs) if the table
+ * is missing, so an unapplied migration never blocks sign-in.
+ */
+function zc_rate_limit_hit($conn, string $key, int $max, int $windowSeconds): bool {
+    try {
+        $now = date('Y-m-d H:i:s');
+        $stmt = $conn->prepare('SELECT hits, window_started_at FROM api_rate_limits WHERE rate_key = ?');
+        $stmt->execute([$key]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row || strtotime($row['window_started_at']) + $windowSeconds <= time()) {
+            $conn->prepare('INSERT INTO api_rate_limits (rate_key, hits, window_started_at) VALUES (?, 1, ?)
+                ON DUPLICATE KEY UPDATE hits = 1, window_started_at = VALUES(window_started_at)')->execute([$key, $now]);
+            return true;
+        }
+        if ((int) $row['hits'] >= $max) {
+            return false;
+        }
+        $conn->prepare('UPDATE api_rate_limits SET hits = hits + 1 WHERE rate_key = ?')->execute([$key]);
+        return true;
+    } catch (Throwable $e) {
+        error_log('[ZenHomeExperts rate limit] ' . $e->getMessage());
+        return true;
+    }
+}
+
+/** Short stable key for the caller's IP (never stores the raw address). */
+function zc_client_ip_key(): string {
+    return substr(hash('sha256', (string) ($_SERVER['REMOTE_ADDR'] ?? '')), 0, 32);
+}
+
+/** Customer login token lifetime in seconds: LOGIN_TOKEN_DAYS (default 30, 1-365). */
+function zc_login_token_lifetime(): int {
+    $days = (int) ($_ENV['LOGIN_TOKEN_DAYS'] ?? $_SERVER['LOGIN_TOKEN_DAYS'] ?? getenv('LOGIN_TOKEN_DAYS') ?: 30);
+    return max(1, min(365, $days)) * 86400;
 }
 
 /**

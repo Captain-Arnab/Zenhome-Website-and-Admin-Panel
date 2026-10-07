@@ -28,14 +28,8 @@ if (!in_array($action, ['request', 'reset'], true)) {
     public_json(422, 'Unknown action.', null, ['action' => 'Use request or reset.']);
 }
 
-$phone = preg_replace('/\D/', '', public_str($in, 'phone'));
-if (strlen($phone) === 11 && $phone[0] === '0') {
-    $phone = substr($phone, 1);
-}
-if (strlen($phone) === 12 && substr($phone, 0, 2) === '91') {
-    $phone = substr($phone, 2);
-}
-if (!preg_match('/^[6-9]\d{9}$/', $phone)) {
+$phone = zc_normalize_phone(public_str($in, 'phone'));
+if ($phone === null) {
     public_json(422, 'Enter a valid 10-digit mobile number.', null, ['phone' => 'Enter a valid 10-digit mobile number.']);
 }
 

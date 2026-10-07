@@ -12,7 +12,10 @@
  */
 require_once __DIR__ . '/site_content.php';
 
-const SITE_SETTING_GROUPS = ['Homepage', 'Contact', 'Social & Apps', 'Footer', 'Branding & Images', 'Admin Alerts'];
+const SITE_SETTING_GROUPS = ['Homepage', 'Contact', 'Social & Apps', 'Footer', 'Branding & Images', 'Admin Alerts', 'App'];
+
+/** Groups never returned by the public api/site_settings.php (staff-only or served by api/app_config.php). */
+const SITE_SETTING_PRIVATE_GROUPS = ['Admin Alerts', 'App'];
 
 /** key => [label, type, group, default, fallback, help] */
 const SITE_SETTING_DEFS = [
@@ -51,6 +54,12 @@ const SITE_SETTING_DEFS = [
     'contact_image' => ['Contact page image', 'image', 'Branding & Images', 'images/site/contact-support.webp', true, ''],
     'admin_alert_enabled' => ['Send admin SMS alerts', 'bool', 'Admin Alerts', '0', true, 'When on, an SMS is sent to the numbers below each time a booking is confirmed.'],
     'admin_alert_mobiles'  => ['Admin alert mobile numbers', 'mobile_list', 'Admin Alerts', '', true, 'Comma-separated 10-digit mobile numbers (max 5) to notify on new bookings.'],
+    'app_min_version_android' => ['Minimum Android app version', 'version', 'App', '1.0.0', true, 'Android apps older than this (e.g. 1.2.0) are asked to update. Read by api/app_config.php.'],
+    'app_min_version_ios'     => ['Minimum iOS app version', 'version', 'App', '1.0.0', true, 'iOS apps older than this are asked to update.'],
+    'app_latest_version'      => ['Latest app version', 'version', 'App', '1.0.0', true, 'Newest published version; older apps may show an optional "update available" prompt.'],
+    'app_force_update'        => ['Force update below minimum version', 'bool', 'App', '0', true, 'When on, apps below the minimum version must update before they can be used.'],
+    'app_maintenance'         => ['App maintenance mode', 'bool', 'App', '0', true, 'When on, the apps show the maintenance message instead of the booking screens.'],
+    'app_maintenance_message' => ['Maintenance message', 'textarea', 'App', 'We are improving our service. Please try again in a little while.', true, 'Shown in the apps while maintenance mode is on.'],
 ];
 
 /** Stored values (key => string) or null when the table is unavailable. */
@@ -184,7 +193,10 @@ function site_social_links(): array
 function site_settings_public(array $resolved, string $baseUrl): array
 {
     $out = [];
-    foreach (SITE_SETTING_DEFS as $key => [$label, $type]) {
+    foreach (SITE_SETTING_DEFS as $key => [$label, $type, $group]) {
+        if (in_array($group, SITE_SETTING_PRIVATE_GROUPS, true)) {
+            continue;
+        }
         $value = $resolved[$key] ?? '';
         if ($value === '') {
             continue;

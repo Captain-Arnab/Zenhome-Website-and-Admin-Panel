@@ -1,196 +1,190 @@
 <?php
-// MUST be the first thing in the file, before session or DB
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Auth-Token, x-auth-token, X-Requested-With");
-    header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-    header("Access-Control-Max-Age: 86400");
-    http_response_code(200);
-    exit();
+/**
+ * POST  start a PhonePe v2 Standard Checkout payment for one of the customer's
+ *       own bookings. Customer login token required.
+ *       {"order_id": "ZC-<unique_booking_id>", "amount"?: ignored, "message"?}
+ *       The amount is the booking's server price (service_booking.price).
+ *       409 when that transaction is already paid or belongs to someone else.
+ *       200 {statusCode, status, message, success:true, payment_url, transaction_id, data:{...}}
+ *       PhonePe returns the customer to PHONEPE_REDIRECT_URL?transactionId=<order_id>.
+ *
+ * GET   admin transaction list (Admin-Token header = ADMIN_SECRET).
+ */
+require __DIR__ . '/public_helper.php';
+require_once __DIR__ . '/runtime.php';
+
+public_cors('GET, POST, OPTIONS');
+
+require_once __DIR__ . '/../vendor/autoload.php';
+Dotenv\Dotenv::createImmutable(__DIR__ . '/..')->safeLoad();
+
+/** Error body keeping the legacy "error" key next to the standard envelope. */
+function payments_fail(int $code, string $error, string $message, array $extra = []): void
+{
+    http_response_code($code);
+    echo json_encode(['statusCode' => $code, 'status' => 'error', 'success' => false, 'error' => $error, 'message' => $message] + $extra, JSON_UNESCAPED_SLASHES);
+    exit;
 }
-
-// Normal CORS headers for all other requests
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Auth-Token, x-auth-token, X-Requested-With");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Content-Type: application/json");
-
-require __DIR__ . '/../vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
-$dotenv->safeLoad();
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
-// POST = user payment initiation (requires x-auth-token) — PhonePe v2 Standard Checkout
 if ($method === 'POST') {
-    include __DIR__ . '/db.php';
-    include __DIR__ . '/auth_helper.php';
-    include __DIR__ . '/phonepe_client.php';
+    require __DIR__ . '/auth_helper.php';
+    require __DIR__ . '/admin/core/status.php';
+    require_once __DIR__ . '/phonepe_client.php';
 
+    $conn = public_db();
     $auth = getUserIdFromRequest($conn);
     if (!$auth) {
-        http_response_code(401);
-        die(json_encode(['error' => 'Unauthorized', 'message' => 'Please log in again.']));
+        payments_fail(401, 'Unauthorized', 'Please log in again.');
     }
-    $input = json_decode(file_get_contents('php://input'), true) ?: [];
-    $amount = isset($input['amount']) ? (float) $input['amount'] : null;
-    $orderId = $input['order_id'] ?? $input['orderId'] ?? null;
-    $message = $input['message'] ?? 'Order payment';
-    // Website orders ("ZC-<booking id>"): charge the amount the booking was priced at on the server.
-    if (is_string($orderId) && preg_match('/^ZC-(\d+-\d+)$/', $orderId, $m)) {
-        $booking = $conn->prepare('SELECT price FROM service_booking WHERE unique_booking_id = ? AND user_id = ?');
-        $booking->execute([$m[1], $auth['user_id']]);
-        $bookingRow = $booking->fetch(PDO::FETCH_ASSOC);
-        if (!$bookingRow) {
-            http_response_code(404);
-            die(json_encode(['error' => 'Booking not found', 'message' => 'This booking was not found for your account.']));
-        }
-        if ((float) $bookingRow['price'] > 0) {
-            $amount = (float) $bookingRow['price'];
-        }
+    $userId = (int) $auth['user_id'];
+
+    $input = json_decode(file_get_contents('php://input') ?: '', true);
+    if (!is_array($input)) {
+        $input = $_POST;
     }
-    if ($amount === null || $amount <= 0) {
-        http_response_code(400);
-        die(json_encode(['error' => 'Invalid amount']));
+    $orderId = $input['order_id'] ?? $input['orderId'] ?? '';
+    $orderId = is_scalar($orderId) ? trim((string) $orderId) : '';
+    $message = isset($input['message']) && is_scalar($input['message']) ? mb_substr(trim((string) $input['message']), 0, 100) : '';
+    if (!preg_match('/^ZC-(\d+-\d+)$/', $orderId, $m)) {
+        payments_fail(422, 'Invalid order', 'order_id must be "ZC-" followed by your booking ID.', ['errors' => ['order_id' => 'Use ZC-<booking id>.']]);
     }
 
-    $merchantOrderId = $orderId ?: ('ORDER_' . strtoupper(bin2hex(random_bytes(8))));
-    $amountPaisa = (int) round($amount * 100);
-    $redirectUrl = $_ENV['PHONEPE_REDIRECT_URL'] ?? '';
-    if ($redirectUrl === '') {
-        http_response_code(500);
-        die(json_encode(['error' => 'PHONEPE_REDIRECT_URL not configured']));
+    $stmt = $conn->prepare('SELECT ID, price, status FROM service_booking WHERE unique_booking_id = ? AND user_id = ?');
+    $stmt->execute([$m[1], $userId]);
+    $booking = $stmt->fetch();
+    if (!$booking) {
+        payments_fail(404, 'Booking not found', 'This booking was not found for your account.');
     }
+    if (booking_status_canonical($booking['status']) === 'Cancelled') {
+        payments_fail(409, 'Booking cancelled', 'This booking is cancelled and cannot be paid.');
+    }
+    $amount = (float) $booking['price'];
+    if ($amount <= 0) {
+        payments_fail(422, 'Invalid amount', 'Nothing to pay for this booking.');
+    }
+
+    $stmt = $conn->prepare('SELECT user_id, status FROM transactions WHERE transaction_id = ?');
+    $stmt->execute([$orderId]);
+    $existing = $stmt->fetch();
+    if ($existing && (int) $existing['user_id'] !== $userId) {
+        payments_fail(409, 'Conflict', 'This payment belongs to another account.');
+    }
+    if ($existing && in_array($existing['status'], ['success', 'refunded'], true)) {
+        payments_fail(409, 'Already paid', 'This booking has already been paid.', ['transaction_id' => $orderId]);
+    }
+
+    $redirectUrl = trim((string) ($_ENV['PHONEPE_REDIRECT_URL'] ?? ''));
+    if ($redirectUrl === '') {
+        error_log('[payments] PHONEPE_REDIRECT_URL is not configured.');
+        payments_fail(500, 'Payment not configured', 'Online payment is not available right now. Please choose pay after service.');
+    }
+    $redirectUrl .= (strpos($redirectUrl, '?') === false ? '?' : '&') . 'transactionId=' . rawurlencode($orderId);
 
     try {
-        $client = get_phonepe_client();
         $payRequest = \PhonePe\payments\v2\models\request\builders\StandardCheckoutPayRequestBuilder::builder()
-            ->merchantOrderId($merchantOrderId)
-            ->amount($amountPaisa)
+            ->merchantOrderId($orderId)
+            ->amount((int) round($amount * 100))
             ->redirectUrl($redirectUrl)
-            ->message($message)
+            ->message($message !== '' ? $message : 'Zen Home Experts booking ' . $m[1])
             ->build();
-
-        $payResponse = $client->pay($payRequest);
-
-        if ($payResponse->getState() === 'PENDING' && $payResponse->getRedirectUrl()) {
-            // Save transaction as pending so confirmation can update it
-            $stmt = $conn->prepare("
-                INSERT INTO transactions (transaction_id, user_id, amount, status, payment_mode)
-                VALUES (?, ?, ?, 'pending', 'PHONEPE')
-                ON DUPLICATE KEY UPDATE status = 'pending'
-            ");
-            $stmt->execute([$merchantOrderId, $auth['user_id'], $amount]);
-
-            echo json_encode([
-                'success'         => true,
-                'payment_url'      => $payResponse->getRedirectUrl(),
-                'transaction_id'   => $merchantOrderId,
-            ]);
-        } else {
-            http_response_code(500);
-            echo json_encode(['error' => 'Payment initiation failed', 'state' => $payResponse->getState()]);
-        }
-    } catch (\PhonePe\common\exceptions\PhonePeException $e) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Payment gateway error', 'message' => $e->getMessage()]);
+        $payResponse = get_phonepe_client()->pay($payRequest);
+    } catch (Throwable $e) {
+        error_log('[payments] PhonePe pay failed for ' . $orderId . ': ' . get_class($e) . ': ' . $e->getMessage());
+        payments_fail(502, 'Payment gateway error', 'Could not start the online payment. Please try again or pay after service.');
     }
+
+    if ($payResponse->getState() !== 'PENDING' || !$payResponse->getRedirectUrl()) {
+        error_log('[payments] unexpected PhonePe state for ' . $orderId . ': ' . $payResponse->getState());
+        payments_fail(502, 'Payment initiation failed', 'Could not start the online payment. Please try again or pay after service.', ['state' => $payResponse->getState()]);
+    }
+
+    // Pending row for paymentConfirmation / the webhook to update; never
+    // downgrades a row that a concurrent confirmation just marked success.
+    $conn->prepare("
+        INSERT INTO transactions (transaction_id, user_id, amount, status, payment_mode)
+        VALUES (?, ?, ?, 'pending', 'PHONEPE')
+        ON DUPLICATE KEY UPDATE status = IF(status IN ('success', 'refunded'), status, 'pending'), amount = VALUES(amount)
+    ")->execute([$orderId, $userId, $amount]);
+
+    $result = ['payment_url' => $payResponse->getRedirectUrl(), 'transaction_id' => $orderId, 'amount' => $amount];
+    http_response_code(200);
+    echo json_encode(['statusCode' => 200, 'status' => 'success', 'message' => 'Payment started.', 'success' => true]
+        + $result + ['data' => $result], JSON_UNESCAPED_SLASHES);
     exit;
 }
 
 // GET = admin list (requires Admin-Token header)
-if (empty($_ENV['ADMIN_SECRET']) || !isset($_SERVER['HTTP_ADMIN_TOKEN']) || !hash_equals((string) $_ENV['ADMIN_SECRET'], (string) $_SERVER['HTTP_ADMIN_TOKEN'])) {
-    http_response_code(401);
-    die(json_encode(['error' => 'Unauthorized']));
+if ($method !== 'GET') {
+    payments_fail(405, 'Method not allowed', 'Use GET or POST for this request.');
 }
-
-// Database connection
-$db = new mysqli(
-    $_ENV['DB_HOST'] ?? 'localhost',
-    $_ENV['DB_USER'] ?? '',
-    $_ENV['DB_PASSWORD'] ?? '',
-    $_ENV['DB_NAME'] ?? 'zencareservice_servicy'
-);
-
-if ($db->connect_error) {
-    http_response_code(500);
-    die(json_encode(['error' => 'Database connection failed']));
+if (empty($_ENV['ADMIN_SECRET']) || !isset($_SERVER['HTTP_ADMIN_TOKEN']) || !hash_equals((string) $_ENV['ADMIN_SECRET'], (string) $_SERVER['HTTP_ADMIN_TOKEN'])) {
+    payments_fail(401, 'Unauthorized', 'Admin token required.');
 }
 
 try {
-    // Get filters from request
+    $db = new mysqli(
+        $_ENV['DB_HOST'] ?? 'localhost',
+        $_ENV['DB_USER'] ?? '',
+        $_ENV['DB_PASSWORD'] ?? '',
+        $_ENV['DB_NAME'] ?? ''
+    );
+} catch (Throwable $e) {
+    $db = null;
+}
+if (!$db || $db->connect_error) {
+    error_log('[payments] admin list DB connection failed.');
+    payments_fail(503, 'Database connection failed', 'Service temporarily unavailable. Please try again.');
+}
+
+try {
     $params = [
-        'page' => max(1, $_GET['page'] ?? 1),
-        'limit' => min(100, $_GET['limit'] ?? 20),
-        'status' => $_GET['status'] ?? null,
-        'date_from' => $_GET['date_from'] ?? null,
-        'date_to' => $_GET['date_to'] ?? null,
-        'search' => $_GET['search'] ?? null
+        'page' => max(1, (int) ($_GET['page'] ?? 1)),
+        'limit' => max(1, min(100, (int) ($_GET['limit'] ?? 20))),
+        'status' => isset($_GET['status']) && is_string($_GET['status']) && $_GET['status'] !== '' ? $_GET['status'] : null,
+        'date_from' => isset($_GET['date_from']) && is_string($_GET['date_from']) && $_GET['date_from'] !== '' ? $_GET['date_from'] : null,
+        'date_to' => isset($_GET['date_to']) && is_string($_GET['date_to']) && $_GET['date_to'] !== '' ? $_GET['date_to'] : null,
+        'search' => isset($_GET['search']) && is_string($_GET['search']) && $_GET['search'] !== '' ? $_GET['search'] : null,
     ];
 
-    // Build SQL query
     $where = [];
     $bindTypes = '';
     $bindValues = [];
-    
+
     if ($params['status']) {
         $where[] = "status = ?";
         $bindTypes .= 's';
         $bindValues[] = $params['status'];
     }
-    
     if ($params['date_from']) {
         $where[] = "created_at >= ?";
         $bindTypes .= 's';
         $bindValues[] = $params['date_from'];
     }
-    
     if ($params['date_to']) {
         $where[] = "created_at <= ?";
         $bindTypes .= 's';
         $bindValues[] = $params['date_to'] . ' 23:59:59';
     }
-    
     if ($params['search']) {
         $where[] = "(transaction_id LIKE ? OR user_id LIKE ? OR payment_mode LIKE ?)";
         $bindTypes .= 'sss';
         $searchTerm = '%' . $params['search'] . '%';
-        $bindValues[] = $searchTerm;
-        $bindValues[] = $searchTerm;
-        $bindValues[] = $searchTerm;
+        array_push($bindValues, $searchTerm, $searchTerm, $searchTerm);
     }
 
-    // Count total records
-    $countSql = "SELECT COUNT(*) as total FROM transactions";
-    if (!empty($where)) {
-        $countSql .= " WHERE " . implode(" AND ", $where);
-    }
-    
+    $countSql = "SELECT COUNT(*) as total FROM transactions" . ($where ? " WHERE " . implode(" AND ", $where) : '');
     $countStmt = $db->prepare($countSql);
-    if (!empty($bindValues)) {
+    if ($bindValues) {
         $countStmt->bind_param($bindTypes, ...$bindValues);
     }
     $countStmt->execute();
-    $total = $countStmt->get_result()->fetch_assoc()['total'];
+    $total = (int) $countStmt->get_result()->fetch_assoc()['total'];
 
-    // Fetch paginated data
-    $sql = "
-        SELECT 
-            transaction_id, 
-            user_id, 
-            amount, 
-            status, 
-            payment_mode, 
-            created_at,
-            updated_at
-        FROM transactions
-    ";
-    
-    if (!empty($where)) {
-        $sql .= " WHERE " . implode(" AND ", $where);
-    }
-    
-    $sql .= " ORDER BY created_at DESC LIMIT ? OFFSET ?";
+    $sql = "SELECT transaction_id, user_id, amount, status, payment_mode, created_at, updated_at FROM transactions"
+        . ($where ? " WHERE " . implode(" AND ", $where) : '')
+        . " ORDER BY created_at DESC LIMIT ? OFFSET ?";
     $bindTypes .= 'ii';
     $bindValues[] = $params['limit'];
     $bindValues[] = ($params['page'] - 1) * $params['limit'];
@@ -200,39 +194,37 @@ try {
     $stmt->execute();
     $result = $stmt->get_result();
 
-    // Format response
     $transactions = [];
     while ($row = $result->fetch_assoc()) {
         $transactions[] = [
             'id' => $row['transaction_id'],
             'user' => $row['user_id'],
-            'amount' => (float)$row['amount'],
+            'amount' => (float) $row['amount'],
             'status' => $row['status'],
             'method' => $row['payment_mode'],
             'date' => $row['created_at'],
-            'last_updated' => $row['updated_at']
+            'last_updated' => $row['updated_at'],
         ];
     }
 
+    http_response_code(200);
     echo json_encode([
+        'statusCode' => 200,
+        'status' => 'success',
         'success' => true,
         'data' => [
             'meta' => [
-                'page' => (int)$params['page'],
-                'limit' => (int)$params['limit'],
-                'total' => (int)$total,
-                'pages' => ceil($total / $params['limit'])
+                'page' => $params['page'],
+                'limit' => $params['limit'],
+                'total' => $total,
+                'pages' => (int) ceil($total / $params['limit']),
             ],
-            'transactions' => $transactions
-        ]
-    ]);
-
-} catch (Exception $e) {
-    http_response_code(400);
-    echo json_encode([
-        'success' => false,
-        'error' => $e->getMessage()
-    ]);
+            'transactions' => $transactions,
+        ],
+    ], JSON_UNESCAPED_SLASHES);
+} catch (Throwable $e) {
+    error_log('[payments] admin list failed: ' . $e->getMessage());
+    payments_fail(500, 'Server error', 'Could not load transactions. Please try again.');
 } finally {
     $db->close();
 }

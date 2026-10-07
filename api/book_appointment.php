@@ -1,96 +1,120 @@
 <?php
-include 'db.php';
-include 'auth_helper.php';
-include 'coupon_helper.php';
-require_once __DIR__ . '/legacy_access.php';
-$legacy = legacy_access('book_appointment');
-
-// Set content type to JSON
-header('Content-Type: application/json');
-
-/*
- * Optional fields (older apps can keep sending the original payload):
- *   amount       booking subtotal before discount (website cart total)
- *   items        [{"pack_id": 12, "quantity": 1}] - saverpacks ids; when sent,
- *                the subtotal is calculated here from saverpacks.price
- *   coupon_code  applied with the rules in coupon_helper.php
- * The response then also carries "amount", "discount", "amount_payable"
- * and "coupon". service_booking.price stores the payable amount.
+/**
+ * Create a service booking for the signed-in customer (website checkout and
+ * apps). Customer login token required; any user_id in the body is ignored.
+ *
+ * POST JSON {
+ *   category, subcategories?, date (Y-m-d, today or later), service_slot,
+ *   location, landmark?,
+ *   items: [{"pack_id": 12, "quantity": 1}, ...]   required, saverpacks ids
+ *   coupon_code?, payment_method?: "online" | "cash" (default cash)
+ * }
+ * The price is always calculated here from saverpacks.price; a client
+ * "amount" is accepted but ignored. service_booking.price stores the payable
+ * amount. A slot already held by another non-cancelled booking is 409.
+ *
+ * 200 {statusCode, status, message, id, unique_booking_id, amount, discount,
+ *      amount_payable, coupon?, payment_method, data:{...same, booking}}
  */
+require __DIR__ . '/public_helper.php';
+require __DIR__ . '/auth_helper.php';
+require __DIR__ . '/coupon_helper.php';
+require __DIR__ . '/booking_helper.php';
+require_once __DIR__ . '/legacy_access.php';
+
+public_cors('POST, OPTIONS');
+public_require_method('POST');
+legacy_access('book_appointment');
 
 function booking_coupon_error(string $message, int $code = 422): void
 {
-    http_response_code($code);
-    echo json_encode(["status" => "error", "message" => $message, "errors" => ["coupon_code" => $message]]);
-    exit;
+    public_json($code, $message, null, ['coupon_code' => $message]);
 }
 
-// Get JSON input
-$data = json_decode(file_get_contents("php://input"), true);
+$conn = public_db();
+$auth = requireAuth($conn);
+$user_id = (int) $auth['user_id'];
 
-// Check if the required fields are provided
-if (!$data || !isset($data['category']) || !isset($data['service_slot']) || !isset($data['date']) || !isset($data['location']) || !isset($data['user_id'])) {
-    echo json_encode(["status" => "error", "message" => "Invalid input"]);
-    exit;
+$data = json_decode(file_get_contents('php://input') ?: '', true);
+if (!is_array($data)) {
+    public_json(400, 'Invalid input');
 }
 
-// Extract data from the request
-$category = $data['category'];
-$subcategories = $data['subcategories'] ?? null; // Now a string, not a JSON array
-$date = $data['date'];
-$location = $data['location'];
-$landmark = isset($data['landmark']) ? $data['landmark'] : null;
-$user_id = $data['user_id'];  // Get the user ID from the request
-$service_slot = $data['service_slot'];
-$status = "Pending Confirmation"; // Default status
-// Optional, backward compatible: apps/pages that don't send it default to
-// "cash" (pay-after-service), which is correct for them - only the website
-// checkout's "online" radio sends payment_method=online, and that case gets
-// its confirmation SMS later, on payment success, not here.
-$isOnlinePayment = ($data['payment_method'] ?? 'cash') === 'online';
+$str = fn(string $key): string => isset($data[$key]) && is_scalar($data[$key]) ? trim((string) $data[$key]) : '';
+$category = $str('category');
+$subcategories = $str('subcategories') !== '' ? $str('subcategories') : null;
+$location = $str('location');
+$landmark = $str('landmark') !== '' ? $str('landmark') : null;
+$service_slot = $str('service_slot');
+$now = zc_app_now();
 
-legacy_require_user($legacy, $user_id);
-
-// A login token, when sent, must belong to the same customer.
-if (getBearerToken() !== null) {
-    $auth = getUserIdFromRequest($conn);
-    if ($auth && (int) $auth['user_id'] !== (int) $user_id) {
-        http_response_code(403);
-        echo json_encode(["status" => "error", "message" => "You can only book for your own account."]);
-        exit;
+$errors = [];
+foreach (['category' => $category, 'service_slot' => $service_slot, 'location' => $location] as $key => $value) {
+    if ($value === '') {
+        $errors[$key] = 'This field is required.';
+    } elseif (mb_strlen($value) > 255) {
+        $errors[$key] = 'Must be 255 characters or fewer.';
     }
 }
-
-// Booking amount: saverpacks prices when pack ids are sent, else the given amount.
-$amount = coupon_amount_from_packs($conn, $data['items'] ?? null);
-if ($amount === null && !empty($data['items'])) {
-    http_response_code(422);
-    echo json_encode(["status" => "error", "message" => "Some services in your cart are no longer available. Please review your cart.", "errors" => ["items" => "Unknown or unavailable service."]]);
-    exit;
+if ($landmark !== null && mb_strlen($landmark) > 255) {
+    $errors['landmark'] = 'Must be 255 characters or fewer.';
 }
-if ($amount === null && isset($data['amount']) && is_numeric($data['amount']) && (float) $data['amount'] > 0 && (float) $data['amount'] <= 1000000) {
-    $amount = round((float) $data['amount'], 2);
+$date = zc_valid_date($str('date'));
+if ($date === null) {
+    $errors['date'] = 'Use a valid date (YYYY-MM-DD).';
+} elseif ($date < $now->format('Y-m-d')) {
+    $errors['date'] = 'The service date cannot be in the past.';
+} elseif ($service_slot !== '' && zc_slot_elapsed($date, $service_slot, $now)) {
+    $errors['service_slot'] = 'This time slot has already started. Please pick a later slot.';
+}
+
+$items = $data['items'] ?? null;
+if (!is_array($items) || !$items) {
+    $errors['items'] = 'Add at least one service (items with pack_id).';
+} else {
+    foreach ($items as $item) {
+        if (!is_array($item) || (int) ($item['pack_id'] ?? $item['packId'] ?? 0) <= 0) {
+            $errors['items'] = 'Every item needs a valid pack_id.';
+            break;
+        }
+    }
+}
+if ($errors) {
+    public_json(422, reset($errors), null, $errors);
+}
+
+$amount = coupon_amount_from_packs($conn, $items);
+if ($amount === null) {
+    public_json(422, 'Some services in your cart are no longer available. Please review your cart.', null, ['items' => 'Unknown or unavailable service.']);
 }
 
 $coupon = null;
-$couponCode = isset($data['coupon_code']) && is_scalar($data['coupon_code']) ? trim((string) $data['coupon_code']) : '';
+$couponCode = $str('coupon_code');
 if ($couponCode !== '') {
-    if ($amount === null) {
-        booking_coupon_error('The booking amount is required to apply a coupon.');
-    }
-    $coupon = coupon_evaluate($conn, $couponCode, $amount, (int) $user_id);
+    $coupon = coupon_evaluate($conn, $couponCode, $amount, $user_id);
     if (!$coupon['valid']) {
         booking_coupon_error($coupon['message']);
     }
 }
 
-$discount = $coupon ? $coupon['discount'] : null;
-$payable = $amount !== null ? round($amount - (float) $discount, 2) : null;
+$discount = $coupon ? (float) $coupon['discount'] : 0.0;
+$payable = round($amount - $discount, 2);
+$isOnlinePayment = strtolower($str('payment_method')) === 'online' && $payable > 0;
+$status = 'Pending Confirmation';
+$created_at = date('Y-m-d H:i:s');
 
-// Get the current timestamp for `created_at`
-$created_at = date("Y-m-d H:i:s");
+// Serialise bookings for the same date + slot so two customers can't both get it.
+$lock = 'zc_slot_' . md5($date . '|' . $service_slot);
+$locked = (int) $conn->query('SELECT GET_LOCK(' . $conn->quote($lock) . ', 5)')->fetchColumn() === 1;
+if (!$locked) {
+    public_json(409, 'This time slot is being booked right now. Please try again or pick another slot.', null, ['service_slot' => 'Slot busy.']);
+}
 
 try {
+    if (in_array($service_slot, zc_booked_slots($conn, $date), true)) {
+        public_json(409, 'Sorry, this time slot was just booked. Please pick another slot.', null, ['service_slot' => 'This slot is no longer available.']);
+    }
+
     $conn->beginTransaction();
 
     if ($coupon) {
@@ -101,37 +125,28 @@ try {
             booking_coupon_error('This coupon has reached its usage limit.', 409);
         }
         $used = $conn->prepare("SELECT COUNT(*) FROM service_booking WHERE coupon_id = ? AND user_id = ? AND LOWER(TRIM(status)) NOT IN ('cancelled', 'canceled')");
-        $used->execute([(int) $coupon['coupon']['id'], (int) $user_id]);
+        $used->execute([(int) $coupon['coupon']['id'], $user_id]);
         if ((int) $used->fetchColumn() >= max(1, (int) $coupon['coupon']['per_user_limit'])) {
             $conn->rollBack();
             booking_coupon_error('You have already used this coupon.', 409);
         }
     }
 
-    // Prepare SQL query to insert data
-    $sql = "INSERT INTO service_booking (category, subcategories, date, location, landmark, user_id, status, service_slot, created_at,
-                                         price, gross_amount, coupon_id, coupon_code, discount_amount)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    $stmt = $conn->prepare($sql);
+    $stmt = $conn->prepare("INSERT INTO service_booking (category, subcategories, date, location, landmark, user_id, status, Service_Slot, created_at,
+                                         price, gross_amount, coupon_id, coupon_code, discount_amount, payment_method)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->execute([
         $category, $subcategories, $date, $location, $landmark, $user_id, $status, $service_slot, $created_at,
-        $payable !== null ? (int) round($payable) : null,
+        (int) round($payable),
         $amount,
         $coupon ? (int) $coupon['coupon']['id'] : null,
         $coupon ? $coupon['coupon']['code'] : null,
-        $discount,
+        $coupon ? $discount : null,
+        $isOnlinePayment ? 'Online' : 'Cash',
     ]);
-
-    // Get the unique ID of the newly inserted record
-    $id = $conn->lastInsertId();
-
-    // Generate a unique booking ID by concatenating user_id and record ID
-    $unique_booking_id = $user_id . "-" . $id;
-
-    // Update the record with the unique booking ID
-    $update_sql = "UPDATE service_booking SET unique_booking_id = ? WHERE id = ?";
-    $update_stmt = $conn->prepare($update_sql);
-    $update_stmt->execute([$unique_booking_id, $id]);
+    $id = (int) $conn->lastInsertId();
+    $unique_booking_id = $user_id . '-' . $id;
+    $conn->prepare('UPDATE service_booking SET unique_booking_id = ? WHERE ID = ?')->execute([$unique_booking_id, $id]);
 
     $conn->commit();
 } catch (PDOException $e) {
@@ -139,41 +154,39 @@ try {
         $conn->rollBack();
     }
     error_log('[book_appointment] ' . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(["status" => "error", "message" => "Error: could not save the booking. Please try again."]);
-    exit;
+    public_json(500, 'Error: could not save the booking. Please try again.');
+} finally {
+    $conn->query('SELECT RELEASE_LOCK(' . $conn->quote($lock) . ')');
 }
 
-// Pay-after-service booking: confirm now. Online-payment bookings get their
-// SMS later, on payment success (paymentConfirmation.php / the webhook),
-// never at this pending stage. An SMS failure must never fail/delay this response.
-// Mirrors the website's own decision (zen-pages.js): a 100%-off coupon
-// leaves nothing to pay online, so it is confirmed immediately too.
-if (!$isOnlinePayment || $payable === null || $payable <= 0) {
+// Pay-after-service booking (or nothing left to pay): confirm now. Online
+// bookings get their SMS on payment success (paymentConfirmation.php / the
+// webhook). An SMS failure must never fail or delay this response.
+if (!$isOnlinePayment) {
     try {
         require_once __DIR__ . '/admin/core/bootstrap.php';
-        notify_booking_confirmed((int) $id);
+        notify_booking_confirmed($id);
     } catch (Throwable $e) {
         error_log('[book_appointment] notify failed: ' . $e->getMessage());
     }
 }
 
-// Send the response with the unique booking ID
-$response = [
-    "status" => "success",
-    "message" => "Service booking added successfully",
-    "unique_booking_id" => $unique_booking_id  // Send the unique booking ID
-];
-if ($amount !== null) {
-    $response["amount"] = $amount;
-    $response["discount"] = (float) $discount;
-    $response["amount_payable"] = $payable;
-}
-if ($coupon) {
-    $response["coupon"] = coupon_summary($coupon);
-}
-echo json_encode($response);
+$stmt = $conn->prepare(zc_booking_select_sql() . ' WHERE b.ID = ?');
+$stmt->execute([$id]);
+$booking = zc_booking_item($stmt->fetch(PDO::FETCH_ASSOC));
 
-// Close connection
-$conn = null;
-?>
+$result = [
+    'id' => $id,
+    'unique_booking_id' => $unique_booking_id,
+    'amount' => $amount,
+    'discount' => $discount,
+    'amount_payable' => $payable,
+    'payment_method' => $isOnlinePayment ? 'online' : 'cash',
+];
+if ($coupon) {
+    $result['coupon'] = coupon_summary($coupon);
+}
+
+http_response_code(200);
+echo json_encode(['statusCode' => 200, 'status' => 'success', 'message' => 'Service booking added successfully']
+    + $result + ['data' => $result + ['booking' => $booking]], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
