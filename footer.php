@@ -338,10 +338,18 @@ $footerHeadings = ['Popular Services', 'Home Services'];
 
             <div class="zcs-footer-bottom-inner">
 
-                <p>
-                    © <span id="zcsCurrentYear"></span>
-                    <?= site_e(site_setting('company_name')) ?>. All Rights Reserved.
-                </p>
+                <div class="zcs-footer-bottom-legal">
+
+                    <p>
+                        © <span id="zcsCurrentYear"></span>
+                        <?= site_e(site_setting('company_name')) ?>. All Rights Reserved.
+                    </p>
+
+                    <p class="zcs-footer-ownership">
+                        Zen Home Experts is owned and operated by ZenCare.
+                    </p>
+
+                </div>
 
                 <div class="zcs-footer-bottom-links">
 

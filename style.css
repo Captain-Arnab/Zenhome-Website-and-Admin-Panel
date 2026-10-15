@@ -1206,6 +1206,11 @@ a.zcs-footer-contact-item:hover strong {
     border-radius: 50%;
 }
 
+.zcs-footer-bottom .zcs-footer-ownership {
+    margin-top: 4px;
+    color: #c3ced8;
+}
+
 
 /* ================================
    RESPONSIVE
@@ -4834,6 +4839,35 @@ a.zcs-footer-contact-item:hover strong {
 
 .zcs-ac-intro-points i {
     color: #65b32e;
+}
+
+
+/* OWNERSHIP DECLARATION */
+
+.zcs-ac-intro-content > .zcs-ac-ownership {
+    margin: 18px 0 0;
+    padding: 10px 14px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    color: #334d63;
+
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.6;
+
+    background: #f3f9ee;
+    border-left: 3px solid #65b32e;
+    border-radius: 8px;
+}
+
+
+.zcs-ac-ownership i {
+    color: #65b32e;
+    flex-shrink: 0;
 }
 
 

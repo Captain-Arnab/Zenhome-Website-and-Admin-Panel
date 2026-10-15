@@ -160,6 +160,12 @@ include('header.php');
                 <?php endif; ?>
 
 
+                <p class="zcs-ac-ownership">
+                    <i class="fa-solid fa-building"></i>
+                    Zen Home Experts is owned and operated by ZenCare.
+                </p>
+
+
                 <div class="zcs-ac-intro-points">
 
                     <div>
